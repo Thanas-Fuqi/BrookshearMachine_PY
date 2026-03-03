@@ -22,12 +22,12 @@ registers and 256 bytes of RAM.
 | **B** | JUMP | Jump to instruction at address $XY$ if Reg $R$ equals Reg 0. |
 | **C** | HALT | Terminate the program execution. |
 
-**Note:** The code expects a number in hexadecimal in the format of [ **Opcode** | **R** ] [ **X** | **Y** ] (i.e 1A2B)
+**Note:** The code expects a number in hexadecimal in the format of [ **Opcode** | **R** ] [ **X** | **Y** ]. (i.e 1A2B)
 
 ---
 ## Usage Guide
 
-Heres the minimal version to run a code in Machine Language.
+Heres a minimal version to run a code in the Brookshear machine simulator.
 
 ```python
 from Machine_language_CORE import Machine
@@ -56,13 +56,7 @@ ORXY ; Comment No.3 ...
 """
 ```
 
-For the **Machine** to be able to be imported, run the following command from Powershell or CMD in the **Same** folder as *Machine_language_CORE.py*
-
-```bash
-python -m folder.YOUR_FILE
-```
-
-Additionaly you customize the way the machine is run by changing the following properties
+Additionaly you customize the way the machine is run by changing the following properties.
 
 ```python
 # Disable the printing logs of the CPU decode
@@ -75,7 +69,7 @@ cpu.ROWS = i
 cpu.COLS = j
 ```
 
-Also easy is to change the ISA as needed by the user
+Also the user is able to change the ISA as needed.
 
 ```python
 # You can ignore inputs given by either (_) or (*args)
@@ -86,5 +80,7 @@ def _NEW_ISA_OPERATION(o1, o2, o3, next_byte, code):
 cpu.ISA[0xD] = _NEW_ISA_OPERATION
 ```
 
+To run the Brookshear machine the user must have a Windows PC with python version 3.10+ installed.
+
 ---
-<p align="center"><sub>Inspired by Glenn Brookshear's CS: An Overview (11th Ed).<br>Requirements: Python 3.10+, Windows PC.<br>Copyright © Thanas Fuqi 2026</sub></p>
+<p align="center"><sub>Inspired by Glenn Brookshear's CS: An Overview (11th Ed).<br>Copyright © Thanas Fuqi 2026</sub></p>
