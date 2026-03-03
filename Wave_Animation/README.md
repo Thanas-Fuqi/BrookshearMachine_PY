@@ -10,7 +10,7 @@ This project demonstrates the extensibility of the Brookshear Emulator by adding
 The emulator has been extended with a custom function `_display`. When the machine hits an instruction starting with `F` (e.g., `F000`), it triggers the following logic:
 1. **Memory Mapping:** It reads from memory address `0xF6` onwards.
 2. **Binary Visualization:** Each 8-bit pattern in RAM is converted into "pixels" (`██` for 1, spaces for 0).
-3. **ANSI Positioning:** Uses escape codes to lock the graphics to the top-left of the terminal.
+3. **ANSI Positioning:** Uses escape codes to lock the printing to the top-right of the terminal. Leaving space for the "DISPLAY".
 
 ## Property Overrides
 To accommodate the visualization, the machine configuration is modified:
@@ -19,7 +19,9 @@ To accommodate the visualization, the machine configuration is modified:
 * **Global Delay:** The script uses `time.perf_counter()` to ensure the animation runs at a consistent frame rate (i.e. ~10 FPS), compensating for the execution overhead.
 
 ## The Wave Program
-The `Wave_Loop` assembly performs bitwise rotations (`AF01`) and incremental jumps to create a moving pattern in the memory range `0xF6` - `0xFF`. Because the `DISPLAY` opcode is inside the loop, the terminal updates in real-time.
+The `Wave_Loop` code in its core rotates by `1` the hexadecimal value `CC` or in binary **11001100**. Then the new value is added to the screen memory locations from the top to the bottom.
+
+Because of the `1` rotation, it creates a cascading "Staircase" pattern. The first line is rotated each time after a screen render. The result is a pattern seems to move from the upper right to the lower left corner.
 
 ## Usage
 Run the script as follows to ensure the CORE code is correctly linked
