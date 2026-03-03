@@ -93,7 +93,7 @@ class Machine():
     self.register[o1] = self.register[o2] ^ self.register[o3]
 
   def _rotate(self, o1, _, o3, __, code):
-    self.log(self.PC-2,":",code,": Rotated bits of register",o1,",",o3,"times to the left")
+    self.log(self.PC-2,":",code,": Rotated bits of register",o1,",",o3,"times to the right")
     n, v = o3 % 8, self.register[o1]
     self.register[o1] = ((v >> n) | (v << (8 - n))) & 0xFF
 
