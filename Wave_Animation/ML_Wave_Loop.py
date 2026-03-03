@@ -2,8 +2,9 @@ from Machine_language_CORE import Machine
 import time # Calculate delay and overhead
 
 cpu = Machine() # Init a machine instance
-cpu.delay = 0.0001 # Delay prints to debug
 cpu.ROWS, cpu.COLS = 12, 20 # Display x:y
+
+delay = 1/10 # Delayed printing (~10 fps)
 start = time.perf_counter() # Global time
 
 def _display(*args):
@@ -20,6 +21,7 @@ def _display(*args):
   print(f"\033[{cpu.ROWS-1};1H└{'─'*(cpu.COLS-4)}┘")
 
   elapsed = time.perf_counter() - start
+  time.sleep(max(0, delay - elapsed)) # 0 if negative
   print(f"\033[{cpu.ROWS};1HTime: {round(elapsed, 6)} sec")
   start = time.perf_counter()
 

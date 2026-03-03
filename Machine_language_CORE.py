@@ -1,4 +1,4 @@
-import os, time
+import os
 os.system("") # enable ANSI
 
 class Machine():
@@ -8,7 +8,6 @@ class Machine():
 
     self.halted = False # Run until halt is True
     self.PC = 0 # Initial state of Program Counter
-    self.delay = 0 # Optional Lagg during printing
 
     self.debug = True # Enable Printing by default
     self.log_buffer = [] # Hold every printed line
@@ -47,7 +46,7 @@ class Machine():
     # If not constrained print all
     if self.ROWS == 0:
       print(msg) # Basic Printing
-    # Otherwise print -ROWS- rows
+    # Otherwise print "ROWS" rows
     else:
       self.log_buffer.append(msg)
       visible_logs = self.log_buffer[-self.ROWS:]
@@ -55,7 +54,6 @@ class Machine():
       for i, line in enumerate(visible_logs):
         print(f"\033[{i+1};{self.COLS}H\033[92m{line}\033[0m\033[K",end="")
 
-      time.sleep(self.delay)
       print("", end="", flush=True)
 
   # operation(o1, o2, o3, next_byte, code)
