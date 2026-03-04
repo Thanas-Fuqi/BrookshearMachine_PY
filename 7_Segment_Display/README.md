@@ -21,7 +21,7 @@ The `Machine` core is extended with a "Video Output" function.
 * **Pre-cursor:** In a seven segment display the bars are encoded in a `abcdefg` fashion as explained in [*Wiki*](https://en.wikipedia.org/wiki/Seven-segment_display?utm_source=chatgpt.com#Characters).
 * **Lookup Table:** Addresses `00` through `3E` store the bit-patterns for Hex characters `0-F` using the said encoding.
 * **Segment Bars:** `BAR A` through `BAR G` in the code are the portions that "draw" each vertical or horizontal line in the "DISPLAY" buffer.
-* **Dawing:** A line is drawn by **Or**ing with a value which binary representation matches 1 to a drawn pixels and 0 to the other bits.
+* **Dawing:** A line is drawn by **Or**-ing with a value which binary representation matches 1 to a drawn pixels and 0 to the other bits.
 
 ## Usage
 To run the 7-segment simulation, ensure you are in the root directory and execute:
