@@ -22,12 +22,12 @@ registers and 256 bytes of RAM.
 | **B** | JUMP | Jump to instruction at address $XY$ if Reg $R$ equals Reg 0. |
 | **C** | HALT | Terminate the program execution. |
 
-**Note:** The code expects a number in hexadecimal in the format of [ **Opcode** | **R** ] [ **X** | **Y** ]. (i.e 1A2B)
+**Note:** The code expects a hexadecimal value in the format [ **Opcode** | **R** ] [ **X** | **Y** ]. (i.e 1A2B)
 
 ---
 ## Usage Guide
 
-Heres a minimal version to run a code in the Brookshear machine simulator.
+Here's a minimal version to run a code in the Brookshear machine simulator.
 
 ```python
 from Machine_language_CORE import Machine
@@ -37,7 +37,7 @@ cpu.load(CODE_STRING)
 cpu.run()
 ```
 
-The **CODE_STRING** must be a non empty python string in one of the following formats.
+The **CODE_STRING** must be a non-empty Python string in one of the following formats.
 
 ```python
 CODE_STRING = "ORXYORXYORXY ..."
@@ -56,16 +56,16 @@ ORXY ; Comment No.3 ...
 """
 ```
 
-Additionaly you customize the way the machine is run by changing the following properties.
+Additionally you can customize the way the machine is run by changing the following properties.
 
 ```python
 # Disable the printing logs of the CPU decode
 cpu.debug = False
 
-"""Setting a printing window"""
+"""Configure the printing window"""
 # Printing the last i rows
 cpu.ROWS = i
-# starting at the j column
+# Starting at column j
 cpu.COLS = j
 ```
 
@@ -80,7 +80,7 @@ def _NEW_ISA_OPERATION(o1, o2, o3, next_byte, code):
 cpu.ISA[0xD] = _NEW_ISA_OPERATION
 ```
 
-To run the Brookshear machine the user must have a Windows PC with python version 3.10+ installed.
+To run the Brookshear machine, the user must have a Windows PC with python version 3.10+ installed.
 
 ---
 <p align="center"><sub>Inspired by Glenn Brookshear's CS: An Overview (11th Ed).<br>Copyright © Thanas Fuqi 2026</sub></p>
