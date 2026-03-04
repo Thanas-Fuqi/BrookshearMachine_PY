@@ -18,17 +18,17 @@ The standard Brookshear instruction set has been extended with a custom "Display
 
 1. **Memory Mapping:** The machine displays a specific region of RAM (starting at `0xF6`) known as the **Frame Buffer**.
 2. **Binary Visualization:** When the instruction `F000` is executed, the machine reads the bits in the Frame Buffer section.
-3. **Pixel Rendering:** The `_display` function turns the binary representation of lines to visual chars (`1` -> (`██`), `0` -> `  `).
+3. **Pixel Rendering:** The `_display` function turns the binary representation of lines to visual chars .(`1` -> `██`, `0` -> `  `)
 
 ## Core Logic & Data Bits
 In this simulation, every single bit in the 64-byte display represents a living or dead cell.
 
 * **Bit-Packed:** The cells are received in 8-bit packs from memory as one bit of that same line is also a pixel in the display.
-* **Moving Window** The code sets a bit pointer at the far right side of the byte on top of the current cell. The byte is rotated to the right which moves the 2 other positions of adjecent cells to the pointer position. This is done for the byte on top, the byte where the cell is and the byte after it.
-* **Death defualt:** By default the screen starts as a matrix of 0 each gen which would mean that a generational code only has to worry about what need to be alive and skips the "Killing" side of logic.
-* **Alive Cell:** If the cell is alive it substracts 1 for the "itSelf" count and then it checks if the count of the adjecent cells is 2 or 3 which would mean the cell has to be alive.
-* **Dead cell:** If the cell is dead it checks whether the adjecent cell count is exactly 3 so it can be set alive.
-* **Buffer/Screen** Each update is done on the buffer using data from the current screen. After a full update every byte of the buffer is copied to the screen and then zeroed. After the copy-update cycle finishes the screen section is displayed.
+* **Moving Window:** The code sets a bit pointer at the far right side of the byte on top of the current cell. The byte is rotated to the right which moves the 2 other positions of adjacent cells to the pointer position. This is done for the byte on top, the byte where the cell is and the byte after it.
+* **Death default:** By default the screen starts as a matrix of 0s each generation. The code only has to worry about what needs to be alive and skips the "Killing" side of logic.
+* **Alive Cell:** If the cell is alive it subtracts 1 for the "self" count and then it checks if the count of the adjacent cells is 2 or 3 which would mean the cell has to be alive.
+* **Dead cell:** If the cell is dead it checks whether the adjacent cell count is exactly 3 so it can be set alive.
+* **Buffer/Screen:** Each update is done on the buffer using data from the current screen. After a full update every byte of the buffer is copied to the screen and then zeroed. After the copy-update cycle finishes the screen section is displayed.
 
 ## Usage
 To run the simulation and ensure the internal library links are handled correctly, run this command from the root folder:
