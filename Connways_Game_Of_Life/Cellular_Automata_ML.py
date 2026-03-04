@@ -5,7 +5,7 @@ cpu = Machine() # Init a machine instance
 cpu.ROWS, cpu.COLS = 11, 20 # Display x:y
 cpu.debug = False # Disable debuging mode
 
-delay = 1/40 # Delayed printing (~40 fps)
+delay = 1/10 # Delayed printing (~40 fps)
 start = time.perf_counter() # Global time
 
 # --- GLIDER ---
