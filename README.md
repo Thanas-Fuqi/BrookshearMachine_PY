@@ -80,7 +80,5 @@ def _NEW_ISA_OPERATION(o1, o2, o3, next_byte, code):
 cpu.ISA[0xD] = _NEW_ISA_OPERATION
 ```
 
-To run the Brookshear machine, the user must have a Windows PC with python version 3.10+ installed.
-
 ---
 <p align="center"><sub>Inspired by Glenn Brookshear's CS: An Overview (11th Ed).<br>Copyright © Thanas Fuqi 2026</sub></p>
