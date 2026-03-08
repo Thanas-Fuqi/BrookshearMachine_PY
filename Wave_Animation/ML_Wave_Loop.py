@@ -2,7 +2,7 @@ from Machine_language_CORE import Machine
 import time # Calculate delay and overhead
 
 cpu = Machine() # Init a machine instance
-cpu.ROWS, cpu.COLS = 12, 20 # Display x:y
+cpu.ROWS, cpu.COLS = 13, 20 # Display x:y
 
 delay = 1/10 # Delayed printing (~10 fps)
 start = time.perf_counter() # Global time
@@ -28,39 +28,37 @@ def _display(*args):
 cpu.ISA[0xf] = _display
 
 Wave_Loop = """
-2FCC ; 00 11001100
+2FCC ; 00 MASK 11001100
+2101 ; 02 CONST 1
+2200 ; 04 CONST 0
 
-10F6 ; 02
-70F0 ; 04 ADD
-30F6 ; 06
+3FF6 ; 06 ADD MASK
+AF01 ; 08 ROTATE MASK
 
-AF01 ; 08 EXCHANGE
+1007 ; 0A CURRENT ROW_NAME
+5001 ; 0C ROW_NAME += 1
+B214 ; 0E IF ROW_NAME == 0: GOTO 14
 
-1003 ; 0A CURRENT
-2101 ; 0C +1
-2200 ; 0E 0
+3007 ; 10 LOAD NEXT_NAME
+B006 ; 12 JMP0 06
 
-5001 ; 10 INCREMENT
-B21A ; 12
-3003 ; 14
-3007 ; 16
-B002 ; 18
+F000 ; 14 DISPLAY
+AF01 ; 16 ROTATE MASK
+32F6 ; 18 ADD 00 TO ROW_NAME
 
-F000 ; 1A DISPLAY
-AF01 ; 1C EXCHANGE
+1019 ; 1A CURRENT ROW_NAME
+5001 ; 1C ROW_NAME += 1
+B224 ; 1E IF ROW_NAME == 0: GOTO 24
 
-32F6 ; 1E
+3019 ; 20 LOAD NEXT ROW
+B018 ; 22 JMP0 18
 
-101F ; 20
-5001 ; 22
-B22A ; 24
-301F ; 26
-B01E ; 28
+20F6 ; 24 LOAD BASE ROW_NAME
+3007 ; 26 LOAD BASE ROW_NAME
+3019 ; 28 LOAD BASE ROW_NAME
 
-20F6 ; 2A
-301F ; 2C
-B014 ; 2E BACK UP
-C000 ; 30 HALT
+B006 ; 2A JMP0 06
+C000 ; 2C HALT
 """ # PC = "00"
 
 cpu.load(Wave_Loop)
