@@ -14,36 +14,36 @@ def _listener():
 
 threading.Thread(target=_listener, daemon=True).start()
 
-def _random(R, _, __, range, ___):
-  cpu.register[R] = random.randint(0, 0xFF) & range
+def _random(R, _, __, mask, ___):
+  cpu.register[R] = random.randint(0, 0xFF) & mask
 
 cpu.ISA[0xD] = _random
 
-def _display(N, _, __, START, ___):
+def _display(n, _, __, top, ___):
   global start
   print("\033[1;1H", end="") 
 
   output = []
-  output.append(f"┌{'─' * (N*2)}┐\n")
-  grid = [["  " for _ in range(N)] for _ in range(N)]
+  output.append(f"┌{'─' * (n*2)}┐\n")
+  grid = [["  " for _ in range(n)] for _ in range(n)]
 
-  for k in range(N * N):
-    byte = cpu.memory[START + k]
-    if byte == 0xff: continue
+  for k in range(n * n):
+    byte = cpu.memory[top + k]
+    if byte == 0xFF: continue
 
-    di, dj = (byte >> 4) & 0xF, byte & 0xF
-    grid[di][dj] = "\033[91m██\033[0m" if k==0 else "██"
+    i, j = (byte >> 4) & 0xF, byte & 0xF
+    grid[i][j] = "\033[91m██\033[0m" if k==0 else "██"
 
   for row in grid:
     output.append("│" + "".join(row) + "│\n")
 
-  output.append(f"└{'─' * (N*2)}┘\n")
+  output.append(f"└{'─' * (n*2)}┘\n")
 
   score_text = "FINISH! RESPECT++" if cpu.register[0xC] == 63 else f"YOUR SCORE IS : {cpu.register[0xC]:02d}"
   output.append(score_text)
 
   print("".join(output), end="", flush=True)
-  delay = 1 / (5 + min(cpu.register[0xC] // 4, 8))
+  delay = 1 / (7 + min(cpu.register[0xC] // 5, 6))
   elapsed = time.perf_counter() - start
   time.sleep(max(0, delay - elapsed))
   start = time.perf_counter()
