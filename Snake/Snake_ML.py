@@ -2,7 +2,7 @@ from Machine_language_CORE import Machine
 import threading, msvcrt, time, random
 
 cpu = Machine() # Init a machine instance
-cpu.ROWS, cpu.COLS = 11, 20 # Display x:y
+cpu.ROWS, cpu.COLS = 11, 20 # Terminal xy
 cpu.debug = False # Disable debuging mode
 start = time.perf_counter() # Global time
 
@@ -13,6 +13,11 @@ def _listener():
 		time.sleep(0.001)
 
 threading.Thread(target=_listener, daemon=True).start()
+
+def _random(R, _, __, range, ___):
+  cpu.register[R] = random.randint(0, 0xFF) & range
+
+cpu.ISA[0xD] = _random
 
 def _display(N, _, __, START, ___):
   global start
@@ -45,42 +50,21 @@ def _display(N, _, __, START, ___):
 
 cpu.ISA[0xF] = _display
 
-def _place_food(*args):
-  top = cpu.register[0xE]
-  dist = cpu.register[0xD]
-  index = cpu.register[0xC]
 
-  occupied = {
-    cpu.memory[addr] for addr in range(top, top+index+1)
-  }
-
-  while True:
-    i = random.randint(0, 7)
-    j = random.randint(0, 7)
-
-    food_ij = (i << 4) | j
-    if food_ij not in occupied:
-      break
-
-  cpu.memory[dist] = food_ij
-
-cpu.ISA[0xD] = _place_food
-
-
-# --------------- PRELOAD ---------------
+# ---------------- PRELOAD ----------------
 cpu.register[0xE] = 0xC0 # TOP_ARRAY
 cpu.register[0xD] = 0xBF # FOOD_ROW
 cpu.register[0xC] = 0x00 # INDEX
 cpu.register[0xB] = 0x01 # CONSTANT
-cpu.register[0xA] = 0x01 # DEFAULT DELTA
+cpu.register[0xA] = 0x01 # GLOBAL DELTA
 
-# --------------- PRELOAD ---------------
-for i in range(64): # NULL VALUE
-  cpu.memory[0xBF+i] = 0xFF
+# ---------------- PRELOAD ----------------
+for i in range(64): # FILL WITH NULL VALUE
+  cpu.memory[cpu.register[0xD]+i] = 0xFF
 
-# --------------- PRELOAD ---------------
-cpu.memory[0xC0] = 0x31 # I=3,J=3 # HEAD
-cpu.memory[0xBF] = 0x00 # I=0,J=0 # FOOD
+# ---------------- PRELOAD ----------------
+cpu.memory[cpu.register[0xE]] = 0x31 # HEAD
+cpu.memory[cpu.register[0xD]] = 0x00 # FOOD
 
 
 Snake_Game = """
@@ -124,45 +108,62 @@ BC44 ; 38 IF CONSTANT == INDEX :FOOD:
 53E0 ; 3A CHECK_ROW = TOP_ARRAY + CONSTANT
 333F ; 3C LOAD CHECK_ROW (NAME)
 1000 ; 3E LOAD CHECK_ROW (CONFIG)
-B276 ; 40 IF NEW HEAD_ROW == CHECK_ROW :BREAK:
+B28C ; 40 IF NEW HEAD_ROW == CHECK_ROW :BREAK:
 B034 ; 42 JNZ :NEXT:
 
 
 3D47 ; 44 LOAD FOOD_ROW (NAME) [FOOD]
 1000 ; 46 LOAD FOOD_ROW (CONFIG)
 B24C ; 48 IF HEAD_XY == FOOD_XY
-B056 ; 4A JNZ :REMOVE:
+B06C ; 4A JNZ :REMOVE:
 5CCB ; 4C INDEX = INDEX + 01
 203F ; 4E LOAD 63 (MAX_INDEX)
-BC76 ; 50 IF INDEX == 63 :BREAK:
-D000 ; 52 CHANGE FOOD POS
-B06C ; 54 JNZ :STAMP:
+BC8C ; 50 IF INDEX == 63 :BREAK:
 
 
-20FF ; 56 LOAD CONSTANT FF [REMOVE]
+D477 ; 52 GET RANDOM_POS [RANDOM]
+21FF ; 54 LOAD CONSTANT FF
+53E1 ; 56 CHECK_ROW = TOP_ARRAY + CONSTANT [NEXT]
+335B ; 58 LOAD CHECK_ROW (NAME)
+1300 ; 5A LOAD CHECK_ROW (CONFIG)
 
-40E3 ; 58 ONE = TOP_ARRAY
-543B ; 5A TWO = ONE + 01 [NEXT]
+4040 ; 5C LOAD RANDOM_POS
+B352 ; 5E IF CHECK_ROW == RANDOM_POS :RANDOM:
 
-3363 ; 5C LOAD ONE (NAME)
-3461 ; 5E LOAD TWO (NAME)
-1500 ; 60 LOAD TWO (CONFIG)
-3500 ; 62 STORE ONE (DIST)
-
-500B ; 64 CONSTANT = CONSTANT + 01
-BC6C ; 66 IF CONSTANT == INDEX -> :STAMP:
-533B ; 68 ONE = ONE + 01
-B05A ; 6A JNZ :NEXT:
-
-
-50EC ; 6C HEAD_ROW = TOP_ARRAY + INDEX [STAMP]
-3071 ; 6E LOAD HEAD_ROW (NAME)
-3200 ; 70 STORE HEAD_ROW (CONFIG)
+4010 ; 60 LOAD CONSTANT
+BC68 ; 62 IF INDEX == CONSTANT
+511B ; 64 CONSTANT += 01
+B056 ; 66 JNZ :NEXT:
 
 
-F8BF ; 72 DISPLAY
-B000 ; 74 JNZ :TOP:
-C000 ; 76 [BREAK]
+34BF ; 68 LOAD NEW FOOD_POS
+B082 ; 6A JNZ :STAMP:
+
+
+20FF ; 6C LOAD CONSTANT FF [REMOVE]
+
+40E3 ; 6E ONE = TOP_ARRAY
+543B ; 70 TWO = ONE + 01 [NEXT]
+
+3379 ; 72 LOAD ONE (NAME)
+3477 ; 74 LOAD TWO (NAME)
+1500 ; 76 LOAD TWO (CONFIG)
+3500 ; 78 STORE ONE (DIST)
+
+500B ; 7A CONSTANT = CONSTANT + 01
+BC82 ; 7C IF CONSTANT == INDEX -> :STAMP:
+533B ; 7E ONE = ONE + 01
+B070 ; 80 JNZ :NEXT:
+
+
+50EC ; 82 HEAD_ROW = TOP_ARRAY + INDEX [STAMP]
+3087 ; 84 LOAD HEAD_ROW (NAME)
+3200 ; 86 STORE HEAD_ROW (CONFIG)
+
+
+F8BF ; 88 DISPLAY
+B000 ; 8A JNZ :TOP:
+C000 ; 8C [BREAK]
 """
 
 cpu.load(Snake_Game)
