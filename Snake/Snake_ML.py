@@ -1,0 +1,212 @@
+from Machine_language_CORE import Machine
+import threading, msvcrt, time, random
+
+
+cpu = Machine() # Init a machine instance
+cpu.ROWS, cpu.COLS = 11, 20 # Display x:y
+cpu.debug = False # Disable debuging mode
+start = time.perf_counter() # Global time
+
+
+def _listener():
+	while True:
+		if msvcrt.kbhit():
+			cpu.register[0xF] =  msvcrt.getch()[0]
+		time.sleep(0.001)
+
+threading.Thread(target=_listener, daemon=True).start()
+
+
+def _display(*args):
+  global start
+  TOP = 0xF8
+
+  val = cpu.memory[0xB7]
+  fi, fj = (val >> 4) & 0x0F, val & 0x0F
+
+  print(f"\033[1;1H┌{'─'*(cpu.COLS-4)}┐")
+
+  for i in range(cpu.ROWS - 3):
+    binary = f"{cpu.memory[TOP]:08b}"
+
+    row_str = ''.join(
+      f"\033[91m██\033[0m" if i==fi and j==fj else ('██' if bit == '1' else '  ')
+      for j, bit in enumerate(binary)
+    )
+
+    print(f"\033[{i+2};1H│{row_str}│")
+    TOP = (TOP + 1) & 0xFF
+
+  print(f"\033[{cpu.ROWS-1};1H└{'─'*(cpu.COLS-4)}┘")
+
+  score_text = "FINISH! RESPECT++" if cpu.register[0xB]==64 else f"YOUR SCORE IS : {cpu.register[0xB]:2d}"
+  print(f"\033[{cpu.ROWS};1H{score_text}")
+
+  delay = 1 / (5 + min(cpu.register[0xB] // 4, 8))
+
+  elapsed = time.perf_counter() - start
+  time.sleep(max(0, delay - elapsed))
+  start = time.perf_counter()
+
+cpu.ISA[0xf] = _display
+
+
+def _place_food(*args):
+  occupied = {
+    cpu.memory[addr] for addr in range(0xB8, 0xB8 + cpu.register[0xB] + 1)
+  }
+
+  while True:
+    i = random.randint(0, 7)
+    j = random.randint(0, 7)
+
+    food_ij = (i << 4) | j
+    if food_ij not in occupied:
+      break
+
+  cpu.memory[0xB7] = food_ij
+
+cpu.ISA[0xd] = _place_food
+
+
+# ----------- PRELOAD -----------
+cpu.memory[0xB8] = 0x31 # I=3,J=3
+cpu.memory[0xB7] = 0x00 # I=0,J=0
+
+cpu.register[0xE] = 0xF8 # TOP_SCREEN
+cpu.register[0xD] = 0xB8 # TOP_ARRAY
+cpu.register[0xC] = 0xB7 # FOOD_ROW
+cpu.register[0xB] = 0x00 # INDEX
+cpu.register[0xA] = 0x01 # CONSTANT
+cpu.register[0x9] = 0x01 # DEFAULT DELTA
+
+
+Snake_Game = """
+50DB ; 00 HEAD_ROW = TOP_ARRAY + INDEX [TOP]
+3005 ; 02 LOAD HEAD_ROW (NAME)
+1200 ; 04 LOAD HEAD_ROW (CONFIG)
+
+
+2061 ; 06 LOAD b'a'
+BF0C ; 08 IF KEY == b'a'
+B010 ; 0A JNZ :SKIP:
+2907 ; 0C LOAD 07 (I, J-1)
+B02C ; 0E JNZ :CONTINUE:
+
+2064 ; 10 LOAD b'd' [SKIP]
+BF16 ; 12 IF KEY == b'd'
+B01A ; 14 JNZ :SKIP:
+2901 ; 16 LOAD 01 (I, J+1)
+B02C ; 18 JNZ :CONTINUE:
+
+2077 ; 1A LOAD b'w' [SKIP]
+BF20 ; 1C IF KEY == b'w'
+B024 ; 1E JNZ :SKIP:
+29F0 ; 20 LOAD F0 (I-1, J)
+B02C ; 22 JNZ :CONTINUE:
+
+2073 ; 24 LOAD b's' [SKIP]
+BF2A ; 26 IF KEY == b's'
+B02C ; 28 JNZ :CONTINUE:
+2910 ; 2A LOAD 10 (I+1, J)
+
+5229 ; 2C NEW HEAD_ROW [CONTINUE]
+2077 ; 2E CONSTANT 77
+8220 ; 30 CONSTRAIN TO 00-77
+
+
+21FF ; 32 LOAD CONSTANT FF
+511A ; 34 CONSTANT += 01 [NEXT]
+4010 ; 36 LOAD CONSTANT
+BB44 ; 38 IF CONSTANT == INDEX :FOOD:
+53D0 ; 3A CHECK_ROW = TOP_ARRAY + CONSTANT
+333F ; 3C LOAD CHECK_ROW (NAME)
+1000 ; 3E LOAD CHECK_ROW (CONFIG)
+B2AE ; 40 IF NEW HEAD_ROW == CHECK_ROW :BREAK:
+B034 ; 42 JNZ :NEXT:
+
+
+3C47 ; 44 LOAD FOOD_ROW (NAME) [FOOD]
+1000 ; 46 LOAD FOOD_ROW (CONFIG)
+B24C ; 48 IF HEAD_XY == FOOD_XY
+B052 ; 4A JNZ :REMOVE:
+5BBA ; 4C INDEX = INDEX + 01
+D7B7 ; 4E CHANGE FOOD POS
+B068 ; 50 JNZ :STAMP:
+
+
+20FF ; 52 LOAD CONSTANT FF [REMOVE]
+
+40D3 ; 54 ONE = TOP_ARRAY
+543A ; 56 TWO = ONE + 01 [NEXT]
+
+335F ; 58 LOAD ONE (NAME)
+345D ; 5A LOAD TWO (NAME)
+1500 ; 5C LOAD TWO (CONFIG)
+3500 ; 5E STORE ONE (DIST)
+
+500A ; 60 CONSTANT = CONSTANT + 01
+BB68 ; 62 IF CONSTANT == INDEX -> :STAMP:
+533A ; 64 ONE = ONE + 01
+B056 ; 66 JNZ :NEXT:
+
+
+50DB ; 68 HEAD_ROW = TOP_ARRAY + INDEX [STAMP]
+306D ; 6A LOAD HEAD_ROW (NAME)
+3200 ; 6C STORE HEAD_ROW (CONFIG)
+
+
+20FE ; 6E LOAD CONSTANT FE
+40C1 ; 70 ORIGIN = FOOD_ROW
+
+3175 ; 72 LOAD ORIGIN (NAME) [DISPLAY]
+1200 ; 74 LOAD ORIGIN (CONFIG)
+
+
+23F0 ; 76 LOAD CONSTANT F0 (1111 0000)
+8323 ; 78 ISO_I = ORIGIN AND CONSTANT (IIII 0000)
+A304 ; 7A ISO_I = ISO_I ROT 4 (0000 IIII) [I]
+
+
+53E3 ; 7C SCREEN_ROW = TOP_SCREEN + ISO_I
+3383 ; 7E LOAD SCREEN_ROW  (NAME)
+3391 ; 80 LOAD SCREEN_ROW  (NAME)
+1400 ; 82 LOAD SCREEN_ROW  (CONFIG)
+
+
+230F ; 84 LOAD CONSTANT 0F (0000 1111)
+8323 ; 86 ISO_J = ORIGIN AND CONSTANT (0000 JJJJ) [J]
+338D ; 88 LOAD ISO_J (VALUE)
+2580 ; 8A LOAD BASE_POINTER (1000 0000)
+A500 ; 8C ROTATE BASE_POINTER J TIMES
+
+7445 ; 8E SCREEN_ROW = SCREEN_ROW OR BASE_POINTER
+3400 ; 90 STORE SCREEN_ROW (CONFIG)
+
+500A ; 92 CONSTANT = CONSTANT + 01
+BB9A ; 94 IF CONSTANT == INDEX
+511A ; 96 ORIGIN = ORIGIN + 01
+B072 ; 98 JNZ :DISPLAY:
+
+
+F000 ; 9A DISPLAY
+2000 ; 9C CLEAR VALUE
+
+
+3EA1 ; 9E RESET TO F8
+3000 ; A0 LOAD 00 [CLEAR]
+11A1 ; A2 LOAD ROW (NAME)
+511A ; A4 ROW = ROW + 01
+B1AC ; A6 IF ROW == 00
+31A1 ; A8 LOAD ROW + 01
+B0A0 ; AA JNZ :CLEAR:
+
+
+B000 ; AC JNZ :TOP:
+C000 ; AE [BREAK]
+"""
+
+cpu.load(Snake_Game)
+input("PRESS ANY KEY ... ")
+print("\033[2J\033[1;1H", end="")
+cpu.run() # Clear and run emulation
