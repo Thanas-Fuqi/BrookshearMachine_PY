@@ -46,7 +46,7 @@ The program operates entirely within constrained memory and register space:
   - Low nibble → column
 
 * **Snake Body Storage:**  
-  Stored sequentially in memory starting from `0xBF-0xFF` (BF is the food).
+  Stored sequentially in memory starting from `0xC0-0xFF` (C0 is the food).
 
 * **Index Register (`0xC`):**  
   Tracks current snake length (also acts as score).
