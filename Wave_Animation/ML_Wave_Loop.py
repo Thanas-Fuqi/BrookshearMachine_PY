@@ -2,55 +2,53 @@ from Machine_language_CORE import Machine
 import time # Calculate delay and overhead
 
 cpu = Machine() # Init a machine instance
-cpu.ROWS, cpu.COLS = 13, 20 # Display x:y
-
 delay = 1/10 # Delayed printing (~10 fps)
-start = time.perf_counter() # Global time
+time_start = time.perf_counter() # Global time
 
-def _display(*args):
-  global start # Use timer
-  TOP = 0xF6 # Display Start
-  print(f"\033[1;1H┌{'─'*(cpu.COLS-4)}┐")
+# ------------ DEBUG OPTIONS ------------
+cpu.ROWS, cpu.COLS = 13, 20 # Terminal xy
 
-  for i in range(cpu.ROWS-3):
-    binary = f"{cpu.memory[TOP]:08b}" # 8 Bit
+def _display(n, _, __, display_top, ___):
+  global time_start # Use timer
+  print(f"\033[1;1H┌{'─'*16}┐")
+
+  for i in range(n):
+    binary = f"{cpu.memory[display_top]:08b}" # 8 Bit
     row_str = ''.join('██' if bit == '1' else '  ' for bit in binary)
     print(f"\033[{i+2};1H│{row_str}│")
-    TOP = (TOP + 1) & 0xFF
+    display_top = (display_top + 1) & 0xFF
 
-  print(f"\033[{cpu.ROWS-1};1H└{'─'*(cpu.COLS-4)}┘")
+  print(f"\033[{n+2};1H└{'─'*16}┘")
 
-  elapsed = time.perf_counter() - start
+  elapsed = time.perf_counter() - time_start
   time.sleep(max(0, delay - elapsed)) # 0 if negative
-  print(f"\033[{cpu.ROWS};1HTime: {round(elapsed, 6)} sec")
-  start = time.perf_counter()
+  print(f"\033[{n+3};1HTime: {elapsed:.6f} sec")
+  time_start = time.perf_counter()
 
-cpu.ISA[0xf] = _display
+cpu.ISA[0xF] = _display
 
 Wave_Loop = """
-2FCC ; 00 MASK 11001100
-2101 ; 02 CONST 1
-2200 ; 04 CONST 0
+2FCC ; 00 LOAD MASK (11001100)
+2101 ; 02 CONSTANT 01
 
-3FF6 ; 06 ADD MASK
-AF01 ; 08 ROTATE MASK
+3FF6 ; 04 STORE MASK -> DISPLAY_ROW [STORE_ROW]
+AF01 ; 06 ROTATE MASK RIGHT
 
-1007 ; 0A CURRENT ROW_NAME
-5001 ; 0C ROW_NAME += 1
-B214 ; 0E IF ROW_NAME == 0: GOTO 14
+1005 ; 08 LOAD DISPLAY_ROW (NAME)
+5001 ; 0A DISPLAY_ROW += 01
+B212 ; 0C IF DISPLAY_ROW == 00 :DISPLAY:
 
-3007 ; 10 LOAD NEXT_NAME
-B006 ; 12 JMP0 06
+3005 ; 0E LOAD NEW DISPLAY_ROW (NAME)
+B004 ; 10 JMP :STORE_ROW:
 
-F000 ; 14 DISPLAY
-AF01 ; 16 ROTATE MASK
+FAF6 ; 12 DISPLAY A BYTES FROM 0xF6 [DISPLAY]
+AF01 ; 14 ROTATE MASK RIGHT
 
-20F6 ; 18 LOAD BASE ROW_NAME
-3007 ; 1A LOAD BASE ROW_NAME
+20F6 ; 16 LOAD DISPLAY_TOP (NAME)
+3005 ; 18 LOAD DISPLAY_TOP (NAME)
 
-B006 ; 1C JMP0 06
-C000 ; 1E HALT
-""" # PC = "00"
+B004 ; 1A JMP :STORE_ROW:
+"""
 
 cpu.load(Wave_Loop)
 print("""
