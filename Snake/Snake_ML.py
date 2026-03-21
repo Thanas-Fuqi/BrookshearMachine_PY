@@ -22,9 +22,12 @@ cpu.ISA[0xD] = _random
 def _display(n, _, __, top, ___):
   global start
   print("\033[1;1H", end="") 
-
   output = []
-  output.append(f"┌{'─' * (n*2)}┐\n")
+
+  score_text = "FINISH! RESPECT++" if cpu.register[0xC] == 63 else f"YOUR SCORE IS : {cpu.register[0xC]:02d}"
+  output.append(score_text)
+
+  output.append(f"\n┌{'─' * (n*2)}┐\n")
   grid = [["  " for _ in range(n)] for _ in range(n)]
 
   for k in range(n * n):
@@ -39,12 +42,12 @@ def _display(n, _, __, top, ___):
 
   output.append(f"└{'─' * (n*2)}┘\n")
 
-  score_text = "FINISH! RESPECT++" if cpu.register[0xC] == 63 else f"YOUR SCORE IS : {cpu.register[0xC]:02d}"
-  output.append(score_text)
+  elapsed = time.perf_counter() - start
+  output.append(f"Time: {round(elapsed, 6)} sec")
 
   print("".join(output), end="", flush=True)
+
   delay = 1 / (7 + min(cpu.register[0xC] // 5, 6))
-  elapsed = time.perf_counter() - start
   time.sleep(max(0, delay - elapsed))
   start = time.perf_counter()
 
