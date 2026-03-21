@@ -2,158 +2,158 @@ from Machine_language_CORE import Machine
 import time # Calculate delay and overhead
 
 cpu = Machine() # Init a machine instance
-cpu.ROWS, cpu.COLS = 11, 20 # Display x:y
+delay = 1/10 # Delayed printing (~10 fps)
+time_start = time.perf_counter() # Global time
+
+# ------------ DEBUG OPTIONS ------------
+cpu.ROWS, cpu.COLS = 11, 20 # Terminal xy
 cpu.debug = False # Disable debuging mode
 
-delay = 1/10 # Delayed printing (~40 fps)
-start = time.perf_counter() # Global time
+def _display(n, _, __, display_top, ___):
+  global time_start # Use timer
 
-def _display(*args):
-  global start # Use timer
-  TOP = 0xF8 # Display Start
-  print("\033[30;47m", end="")
-  print(f"\033[1;1H┌{'─'*(cpu.COLS-4)}┐")
+  print("\033[30;47m", end="") # Black on white
+  print(f"\033[1;1H┌{'─'*16}┐")
 
-  for i in range(cpu.ROWS-3):
-    binary = f"{cpu.memory[TOP]:08b}" # 8 Bit
+  for i in range(n):
+    binary = f"{cpu.memory[display_top]:08b}" # 8 Bit
     row_str = ''.join('██' if bit == '1' else '  ' for bit in binary)
     print(f"\033[{i+2};1H│{row_str}│")
-    TOP = (TOP + 1) & 0xFF
+    display_top = (display_top + 1) & 0xFF
 
-  print(f"\033[{cpu.ROWS-1};1H└{'─'*(cpu.COLS-4)}┘")
-  print("\033[0m", end="")  # reset colors
+  print(f"\033[{n+2};1H└{'─'*16}┘")
+  print("\033[0m", end="")  # Reset to white on black
 
-  elapsed = time.perf_counter() - start
+  elapsed = time.perf_counter() - time_start
   time.sleep(max(0, delay - elapsed)) # 0 if negative
-  print(f"\033[{cpu.ROWS};1HTime: {round(elapsed, 6)} sec")
-  start = time.perf_counter()
+  print(f"\033[{n+3};1HTime: {elapsed:.6f} sec")
+  time_start = time.perf_counter()
 
-cpu.ISA[0xf] = _display
+cpu.ISA[0xF] = _display
 
 Cellular_Automata = """
-2080 ; 00 + LOAD GLIDER PROGRAM
-30F8 ; 02 + -------------------
-2060 ; 04 + -------------------
-30F9 ; 06 + -------------------
-20C0 ; 08 + -------------------
-30FA ; 0A + -------------------
+2080 ; 00 + LOAD GLIDER NO.0
+2160 ; 04 + LOAD GLIDER NO.1
+22C0 ; 08 + LOAD GLIDER NO.2
 
-2DF8 ; 0C TOP ROW NAME
-2C01 ; 0E 1 CONSTANT
-2A03 ; 10 3 CONSTANT
-2600 ; 12 GEN_I
-2901 ; 14 GEN_J
+30F8 ; 02 + ██--------------
+31F9 ; 06 + --████----------
+32FA ; 0A + ████------------
 
-2B00 ; 16 ALIVE_COUNT
-2700 ; 18 CELL I
+2DF8 ; 0C DISPLAY_TOP
+2C01 ; 0E CONSTANT 01
+2A03 ; 10 CONSTANT 03
+2600 ; 12 G_I
+2901 ; 14 G_J
 
-1FFF ; 1A ROW CONFIG
-1E1B ; 1C ROW NAME
+2B00 ; 16 ALIVE_COUNT [NEXT]
+2700 ; 18 DELTA_I
 
-2801 ; 1E CELL J
-2140 ; 20 ALIVE_MASK
+1FFF ; 1A ROW_CONFIG [GET_ROW]
+1E1B ; 1C ROW_NAME
 
-701F ; 22
-BF30 ; 24 IF ALIVE
-4080 ; 26 LOAD CELL J
-BA34 ; 28 IF CELL J == 3 => DONE
-AF01 ; 2A SHIFT ROW CONFIG
-588C ; 2C CELL J += 1
-B022 ; 2E JMP0 TO 22
-5BBC ; 30 ALIVE_COUNT += 1
-B026 ; 32 JMP0 TO 26
+2801 ; 1E DELTA_J
+2140 ; 20 ALIVE_POINTER
 
-5EEC ; 34 ROW NAME += 1
-577C ; 36 CELL I += 1
+701F ; 22 CHECK = ALIVE_POINTER | ROW_CONFIG [CHECK]
+BF30 ; 24 IF ROW_CONFIG == CHECK :COUNT++:
+4080 ; 26 LOAD DELTA_J [LOAD_J]
+BA34 ; 28 IF DELTA_J == 03 :ROW++:
+AF01 ; 2A ROTATE ROW_CONFIG
+588C ; 2C DELTA_J += 01
+B022 ; 2E JMP :CHECK:
+5BBC ; 30 ALIVE_COUNT += 01 [COUNT++]
+B026 ; 32 JMP :LOAD_J:
 
-2107 ; 38 LOAD ROWS - 1 (8-1)
-8EE1 ; 3A AND WITH MASK
-7EED ; 3C OR WITH MASK
-3E1B ; 3E STORE NEXT ROW
+5EEC ; 34 ROW_NAME += 01 [ROW++]
+577C ; 36 DELTA_I += 01
 
-4070 ; 40 LOAD CELL I
-BA46 ; 42 IF CELL I == 3 FINISH
-B01A ; 44 JMP0 TO 1A
+2107 ; 38 LOAD CONSTANT 07
+8EE1 ; 3A ROW_NAME = ROW_NAME & 07
+7EED ; 3C ROW_NAME = ROW_NAME | 07
+3E1B ; 3E LOAD NEW ROW_NAME
 
-2101 ; 46 POINTER BASE POS
-394B ; 48 LOAD GEN_J
-A100 ; 4A APPLY ROTATE TO POINTER
+4070 ; 40 LOAD DELTA_I
+BA46 ; 42 IF DELTA_I == 03 :CHECK_SELF:
+B01A ; 44 JMP :GET_ROW:
 
-52D6 ; 4C NEW_ROW = TOP ROW + GEN_I
-3251 ; 4E LOAD NEW_ROW
-1000 ; 50 GET NEW_ROW CONFIG
+2101 ; 46 LOAD POINTER 01 (0000 0001) [CHECK_SELF]
+394B ; 48 LOAD G_J
+A100 ; 4A ROTATE POINTER G_J TIMES
 
-7310 ; 52
-B35C ; 54 IF ALIVE
+52D6 ; 4C NEW_ROW = DISPLAY_TOP + G_I
+3251 ; 4E LOAD NEW_ROW (NAME)
+1000 ; 50 LOAD NEW_ROW (CONFIG)
 
-2003 ; 56 LOAD 3
-BB6A ; 58 IF ALIVE_COUNT == 3
-B078 ; 5A JMP0 TO 78
+7310 ; 52 CHECK = POINTER | NEW_ROW (CONFIG)
+B35C ; 54 IF CHECK == NEW_ROW (CONFIG) :COUNT--:
 
-20FF ; 5C LOAD -1
-5BB0 ; 5E ALIVE_COUNT += -1
+2003 ; 56 LOAD CONSTANT 03
+BB6A ; 58 IF ALIVE_COUNT == 03 :DRAW_CELL:
+B078 ; 5A JMP :ROT_POINTER:
 
-2003 ; 60 LOAD 3
-BB6A ; 62 IF ALIVE_COUNT == 3
-2002 ; 64 LOAD 2
-BB6A ; 66 IF ALIVE_COUNT == 2
-B078 ; 68 JMP0 TO 78
+20FF ; 5C LOAD CONSTANT FF (-1) [COUNT--]
+5BB0 ; 5E ALIVE_COUNT += FF (-= 1)
 
-20F0 ; 6A LOAD TOP ROW (BUFFER)
-5006 ; 6C TOP ROW + GEN_I (BUFFER)
-3073 ; 6E LOAD NEW_ROW NAME (BUFFER)
-3077 ; 70 LOAD NEW_ROW NAME (BUFFER)
-1000 ; 72 GET NEW_ROW CONFIG (BUFFER)
-7001 ; 74 REVIVE CELL WITH POINTER (BUFFER)
-3000 ; 76 LOAD THE CHANGED ROW (BUFFER)
+2003 ; 60 LOAD CONSTANT 03
+BB6A ; 62 IF ALIVE_COUNT == 03 :DRAW_CELL:
+2002 ; 64 LOAD CONSTANT 02
+BB6A ; 66 IF ALIVE_COUNT == 02 :DRAW_CELL:
+B078 ; 68 JMP :ROT_POINTER:
 
-1021 ; 78 GET ALIVE_MASK
-A001 ; 7A SHIFT ALIVE_MASK
-3021 ; 7C LOAD THE CHANGED ALIVE_MASK
+20F0 ; 6A LOAD BUFFER_TOP [DRAW_CELL]
+5006 ; 6C ROW = BUFFER_TOP + G_I
+3073 ; 6E LOAD ROW (NAME)
+3077 ; 70 LOAD ROW (NAME)
+1000 ; 72 LOAD ROW (CONFIG)
+7001 ; 74 NEW_ROW = ROW | POINTER (REVIVE)
+3000 ; 76 STORE NEW_ROW -> BUFFER
 
-599C ; 7E GEN_J += 1
-2009 ; 80 LOAD 9
-B992 ; 82 IF GEN_J == 9 : FINISH
+1021 ; 78 LOAD ALIVE_POINTER [ROT_POINTER]
+A001 ; 7A ROTATE ALIVE_POINTER
+3021 ; 7C LOAD NEW ALIVE_POINTER
 
-20FF ; 84 LOAD ROW0
-5006 ; 86 ROW0 += GEN_I
-2407 ; 88 LOAD ROWS - 1 (8-1)
-8004 ; 8A AND WITH MASK
-700D ; 8C OR WITH MASK
-301B ; 8E LOAD MASKED ROW0
-B016 ; 90 JMP0 TO 16
+599C ; 7E G_J += 01
+2009 ; 80 LOAD CONSTANT 09
+B992 ; 82 IF G_J == 09 :G_I++:
 
-566C ; 92 GEN_I += 1
-2008 ; 94 LOAD 8
-B69C ; 96 IF GEN_I == 8 : FINISH
+20FF ; 84 LOAD ROW0 [NEXT_ROW]
+5006 ; 86 ROW0 += G_I
+2407 ; 88 LOAD CONSTANT 07
+8004 ; 8A ROW0 = ROW0 & 07
+700D ; 8C ROW0 = ROW0 | 07
+301B ; 8E LOAD NEW ROW0
+B016 ; 90 JMP :NEXT:
 
-2901 ; 98 RESET GEN_J TO 1 
-B084 ; 9A JMP0 TO 84
+566C ; 92 G_I += 01 [G_I++]
+2008 ; 94 LOAD CONSTANT 08
+B69C ; 96 IF G_I == 08 :COPY_PASTE:
 
-21F0 ; 9C LOAD NAME ORIGIN
-22F8 ; 9E LOAD NAME TARGET
+2901 ; 98 G_J = 01 [RESET_G_J]
+B084 ; 9A JMP :NEXT_ROW:
 
-31A3 ; A0 LOAD NAME ORIGIN
-1300 ; A2 GET CONFIG ORIGIN
-32A7 ; A4 LOAD NAME TARGET
-3300 ; A6 LOAD CONFIG (ORIGIN -> TARGET)
+21F0 ; 9C ORIGIN (NAME) [COPY_PASTE]
+22F8 ; 9E TARGET (NAME)
 
-2000 ; A8 LOAD 0
-31AD ; AA GET CURRENT NAME ORIGIN
-3000 ; AC LOAD 0 TO ORIGIN
+31A3 ; A0 LOAD ORIGIN (NAME) [SWAP]
+1300 ; A2 LOAD ORIGIN (CONFIG)
+32A7 ; A4 LOAD TARGET (NAME)
+3300 ; A6 STORE CONFIG (ORIGIN -> TARGET)
 
-511C ; AE ORIGIN += 1
-522C ; B0 TARGET += 1
+2000 ; A8 LOAD CONSTANT 00
+31AD ; AA LOAD ORIGIN (NAME)
+3000 ; AC STORE 00 TO ORIGIN
 
-B2B6 ; B2 IF TARGET == 00 : FINISH
-B0A0 ; B4 JMP0 TO A0
+511C ; AE ORIGIN (NAME) += 01
+522C ; B0 TARGET (NAME) += 01
 
-F000 ; B6 DISPLAY CHANGES
-2600 ; B8 RESET GEN_I TO 0
-B098 ; BA JMP0 TO 98
+B2B6 ; B2 IF TARGET == 00 :DISPLAY:
+B0A0 ; B4 JMP :SWAP:
 
-C000 ; BC HALT
-"""  # PC = 0
+F8F8 ; B6 DISPLAY 8 BYTES FROM 0xF8 [DISPLAY]
+2600 ; B8 G_I = 00 (RESET G_I)
+B098 ; BA JMP :RESET_G_J:
+"""
 
 cpu.load(Cellular_Automata)
 print("""
