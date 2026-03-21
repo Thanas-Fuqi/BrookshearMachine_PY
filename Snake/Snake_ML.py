@@ -26,7 +26,7 @@ def _display(n, _, __, display_top, ___):
   print("\033[1;1H", end="") 
   output = []
 
-  score_text = "FINISH! RESPECT++" if cpu.register[0xC] == 62 else f"YOUR SCORE IS : {cpu.register[0xC]:02d}"
+  score_text = "FINISH! RESPECT++" if cpu.register[0xC] == 62 else f"SNAKE LENGTH -> {cpu.register[0xC]+1:02d}"
   output.append(score_text)
 
   output.append(f"\n┌{'─' * (n*2)}┐\n")
@@ -56,18 +56,17 @@ def _display(n, _, __, display_top, ___):
 cpu.ISA[0xF] = _display
 
 
-# ---------------- PRELOAD ----------------
+# -------------- PRELOAD ------_-------
 cpu.register[0xE] = 0xC1 # TOP_ARRAY
 cpu.register[0xD] = 0xC0 # FOOD_ROW
-cpu.register[0xC] = 0x01 # INDEX
+cpu.register[0xC] = 0x02 # INDEX
 cpu.register[0xB] = 0x01 # CONSTANT
 cpu.register[0xA] = 0x01 # GLOBAL DELTA
 
-for i in range(63): # FILL WITH NULL VALUE
+for i in range(3, 63): # FILL WITH NULL
   cpu.memory[cpu.register[0xE]+i] = 0xFF
 
 cpu.memory[0xC0] = 0x33  # FOOD at (3,3)
-cpu.memory[0xC2] = 0x07  # HEAD at (0,7)
 
 
 Snake_Game = """
