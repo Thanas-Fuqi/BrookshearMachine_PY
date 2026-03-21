@@ -2,161 +2,163 @@ from Machine_language_CORE import Machine
 import time # Used for timing delays
 
 cpu = Machine() # Init a machine instance
-cpu.ROWS, cpu.COLS = 13, 20 # Display x:y
-
 delay = 1/5 # Delayed printing (~5 fps)
-start = time.perf_counter() # Global Time
+time_start = time.perf_counter() # Global time
 
-def _display(*args):
-  global start # Use timer
-  TOP = 0xF6 # Display Start
-  print(f"\033[1;1H┌{'─'*(cpu.COLS-4)}┐")
+# ------------ DEBUG OPTIONS ------------
+cpu.ROWS, cpu.COLS = 13, 20 # Terminal xy
 
-  for i in range(cpu.ROWS-3):
-    binary = f"{cpu.memory[TOP]:08b}" # 8 Bit
-    row_str = "".join("██" if bit == "1" else "  " for bit in binary)
+def _display(n, _, __, display_top, ___):
+  global time_start # Use timer
+  print(f"\033[1;1H┌{'─'*16}┐")
+
+  for i in range(n):
+    binary = f"{cpu.memory[display_top]:08b}" # 8 Bit
+    row_str = ''.join('██' if bit == '1' else '  ' for bit in binary)
     print(f"\033[{i+2};1H│{row_str}│")
-    TOP = (TOP + 1) & 0xFF
+    display_top = (display_top + 1) & 0xFF
 
-  print(f"\033[{cpu.ROWS-1};1H└{'─'*(cpu.COLS-4)}┘")
+  print(f"\033[{n+2};1H└{'─'*16}┘")
 
-  elapsed = time.perf_counter() - start
+  elapsed = time.perf_counter() - time_start
   time.sleep(max(0, delay - elapsed)) # 0 if negative
-  print(f"\033[{cpu.ROWS};1HTime: {round(elapsed, 6)} sec")
-  start = time.perf_counter()
+  print(f"\033[{n+3};1HTime: {elapsed:.6f} sec")
+  time_start = time.perf_counter()
 
-cpu.ISA[0xf] = _display
+cpu.ISA[0xF] = _display
 
 Loop_7_Segments = """
-20FC ; 00 NUM 0
-30E6 ; 02
-2060 ; 04 NUM 1
-30E7 ; 06
-20DA ; 08 NUM 2
-30E8 ; 0A
-20F2 ; 0C NUM 3
-30E9 ; 0E
-2066 ; 10 NUM 4
-30EA ; 12
-20B6 ; 14 NUM 5
-30EB ; 16
-20BE ; 18 NUM 6
-30EC ; 1A
-20E4 ; 1C NUM 7 
-30ED ; 1E
-20FE ; 20 NUM 8
-30EE ; 22
-20F6 ; 24 NUM 9
-30EF ; 26
-20EE ; 28 NUM A
-30F0 ; 2A
-203E ; 2C NUM B
-30F1 ; 2E
-209C ; 30 NUM C
-30F2 ; 32
-207A ; 34 NUM D
-30F3 ; 36
-209E ; 38 NUM E
-30F4 ; 3A
-208E ; 3C NUM F
-30F5 ; 3E
+20FC ; 00 NUM_0 (1111 1100)
+30E6 ; 02 STORE NUM_0 -> E6
+2060 ; 04 NUM_1 (0110 0000)
+30E7 ; 06 STORE NUM_1 -> E7
+20DA ; 08 NUM_2 (1101 1010)
+30E8 ; 0A STORE NUM_2 -> E8
+20F2 ; 0C NUM_3 (1111 0010)
+30E9 ; 0E STORE NUM_3 -> E9
+2066 ; 10 NUM_4 (0110 0110)
+30EA ; 12 STORE NUM_4 -> EA
+20B6 ; 14 NUM_5 (1011 0110)
+30EB ; 16 STORE NUM_5 -> EB
+20BE ; 18 NUM_6 (1011 1110)
+30EC ; 1A STORE NUM_6 -> EC
+20E4 ; 1C NUM_7 (1110 0100)
+30ED ; 1E STORE NUM_7 -> ED
+20FE ; 20 NUM_8 (1111 1110)
+30EE ; 22 STORE NUM_8 -> EE
+20F6 ; 24 NUM_9 (1111 0110)
+30EF ; 26 STORE NUM_9 -> EF
+20EE ; 28 NUM_A (1110 1110)
+30F0 ; 2A STORE NUM_A -> F0
+203E ; 2C NUM_B (0011 1110)
+30F1 ; 2E STORE NUM_B -> F1
+209C ; 30 NUM_C (1001 1100)
+30F2 ; 32 STORE NUM_C -> F2
+207A ; 34 NUM_D (0111 1010)
+30F3 ; 36 STORE NUM_D -> F3
+209E ; 38 NUM_E (1001 1110)
+30F4 ; 3A STORE NUM_E -> F4
+208E ; 3C NUM_F (1000 1110)
+30F5 ; 3E STORE NUM_F -> F5
 
-1FE6 ; 40 CUREENT STATE
+1FE6 ; 40 LOAD NUM_X [START]
 
-2080 ; 42 BAR A
-70F0 ; 44
-BF4A ; 46
-B04E ; 48
-2138 ; 4A
-31F7 ; 4C
+2080 ; 42 LOAD BAR_A (1000 0000)
+70F0 ; 44 CHECK = NUM_X | BAR_A
+BF4A ; 46 IF CHECK == NUM_X :DRAW:
+B04E ; 48 JMP :SKIP:
+2138 ; 4A LOAD BAR (0011 1000) [DRAW]
+31F7 ; 4C LOAD BAR -> F7
 
-2040 ; 4E BAR B
-70F0 ; 50
-BF56 ; 52
-B062 ; 54
+2040 ; 4E LOAD BAR_B (0100 0000) [SKIP]
+70F0 ; 50 CHECK = NUM_X | BAR_B
+BF56 ; 52 IF CHECK == NUM_X :DRAW:
+B062 ; 54 JMP :SKIP:
 
-2104 ; 56
-10F8 ; 58
-7001 ; 5A
-30F8 ; 5C
-30F9 ; 5E
-30FA ; 60
+2104 ; 56 LOAD 1/3 BAR (0000 0100) [DRAW]
+10F8 ; 58 LOAD ROW (CONFIG)
+7001 ; 5A NEW_ROW = ROW | 1/3 BAR
 
-2020 ; 62 BAR C
-70F0 ; 64
-BF6A ; 66
-B076 ; 68
+30F8 ; 5C LOAD NEW_ROW -> F8
+30F9 ; 5E LOAD NEW_ROW -> F9
+30FA ; 60 LOAD NEW_ROW -> FA
 
-2104 ; 6A
-10FC ; 6C
-7001 ; 6E
-30FC ; 70
-30FD ; 72
-30FE ; 74
+2020 ; 62 LOAD BAR_C (0010 0000) [SKIP]
+70F0 ; 64 CHECK = NUM_X | BAR_C
+BF6A ; 66 IF CHECK == NUM_X :DRAW:
+B076 ; 68 JMP :SKIP:
 
-2010 ; 76 BAR D
-70F0 ; 78
-BF7E ; 7A
-B082 ; 7C
-2138 ; 7E
-31FF ; 80
+2104 ; 6A LOAD 1/3 BAR (0000 0100) [DRAW]
+10FC ; 6C LOAD ROW (CONFIG)
+7001 ; 6E NEW_ROW = ROW | 1/3 BAR
 
-2008 ; 82 BAR E
-70F0 ; 84
-BF8A ; 86
-B096 ; 88
+30FC ; 70 LOAD NEW_ROW -> FC
+30FD ; 72 LOAD NEW_ROW -> FD
+30FE ; 74 LOAD NEW_ROW -> FE
 
-2140 ; 8A
-10FC ; 8C
-7001 ; 8E
-30FC ; 90
-30FD ; 92
-30FE ; 94
+2010 ; 76 LOAD BAR_D (0001 0000) [SKIP]
+70F0 ; 78 CHECK = NUM_X | BAR_D
+BF7E ; 7A IF CHECK == NUM_X :DRAW:
+B082 ; 7C JMP :SKIP:
+2138 ; 7E LOAD BAR (0011 1000) [DRAW]
+31FF ; 80 LOAD BAR -> FF
 
-2004 ; 96 BAR F
-70F0 ; 98
-BF9E ; 9A
-B0AA ; 9C
+2008 ; 82 LOAD BAR_E (0000 1000) [SKIP]
+70F0 ; 84 CHECK = NUM_X | BAR_E
+BF8A ; 86 IF CHECK == NUM_X :DRAW:
+B096 ; 88 JMP :SKIP:
 
-2140 ; 9E
-10F8 ; A0
-7001 ; A2
-30F8 ; A4
-30F9 ; A6
-30FA ; A8
+2140 ; 8A LOAD 1/3 BAR (0100 0000) [DRAW]
+10FC ; 8C LOAD ROW (CONFIG)
+7001 ; 8E NEW_ROW = ROW | 1/3 BAR
 
-2002 ; AA BAR G
-70F0 ; AC
-BFB2 ; AE
-B0B6 ; B0
-2138 ; B2
-31FB ; B4
+30FC ; 90 LOAD NEW_ROW -> FC
+30FD ; 92 LOAD NEW_ROW -> FD
+30FE ; 94 LOAD NEW_ROW -> FE
 
-F000 ; B6 DISPLAY CHANGES
+2004 ; 96 LOAD BAR_F (0000 0100) [SKIP]
+70F0 ; 98 CHECK = NUM_X | BAR_F
+BF9E ; 9A IF CHECK == NUM_X :DRAW:
+B0AA ; 9C JMP :SKIP:
 
-2000 ; B8 CLEAR
-2101 ; BA INCREMENT
+2140 ; 9E LOAD 1/3 BAR (0100 0000) [DRAW]
+10F8 ; A0 LOAD ROW (CONFIG)
+7001 ; A2 NEW_ROW = ROW | 1/3 BAR
 
-30F6 ; BC ADD 0
-12BD ; BE
-5212 ; C0
-B2C8 ; C2
-32BD ; C4
-B0BC ; C6
+30F8 ; A4 LOAD NEW_ROW -> F8
+30F9 ; A6 LOAD NEW_ROW -> F9
+30FA ; A8 LOAD NEW_ROW -> FA
 
-1041 ; C8
-22F6 ; CA
-32BD ; CC RESTART CLEAR
+2002 ; AA LOAD BAR_G (0000 0010) [SKIP]
+70F0 ; AC CHECK = NUM_X | BAR_G
+BFB2 ; AE IF CHECK == NUM_X :DRAW:
+B0B6 ; B0 JMP :DISPLAY:
+2138 ; B2 LOAD BAR (0011 1000) [DRAW]
+31FB ; B4 LOAD BAR -> FB
 
-5001 ; CE
-B2D6 ; D0 ADD E6
-3041 ; D2
-B040 ; D4 BACK UP
-20E6 ; D6
-B0D2 ; D8
+FAF6 ; B6 DISPLAY A ROWS FROM F6 [DISPLAY]
 
-C000 ; DA HALT
-"""  # PC = "00"
+2000 ; B8 LOAD CONSTANT 00
+2101 ; BA LOAD CONSTANT 01
+
+30F6 ; BC LOAD DISPLAY_ROW 00 [CLEAR]
+12BD ; BE LOAD DISPLAY_ROW (NAME)
+5221 ; C0 NEW_ROW = DISPLAY_ROW + 01
+B2C8 ; C2 IF NEW_ROW == 00 :NEXT:
+32BD ; C4 LOAD NEW_ROW (NAME)
+B0BC ; C6 JMP :CLEAR:
+
+22F6 ; C8 LOAD DISPLAY_START (F6) [NEXT]
+32BD ; CA RESETS TO DISPLAY_START
+
+1041 ; CC LOAD NUM_X (NAME)
+5001 ; CE NUM = NUM + 01
+B2D6 ; D0 IF NUM == F6 :RESET_NUM_X:
+3041 ; D2 LOAD NUM (NAME) [LOAD_NUM]
+B040 ; D4 JMP :START:
+20E6 ; D6 LOAD NUM_0 [RESET_NUM_X]
+B0D2 ; D8 JMP :LOAD_NUM:
+"""
 
 cpu.load(Loop_7_Segments)
 print("""
