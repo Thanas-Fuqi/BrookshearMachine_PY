@@ -25,6 +25,16 @@ registers and 256 bytes of RAM.
 **Note:** The code expects a hexadecimal value in the format [ **Opcode** | **R** ] [ **X** | **Y** ]. (i.e 1A2B)
 
 ---
+## Programs
+A collection of programs written in the Brookshear ISA to demonstrate 
+the machine's capabilities:
+
+- **Binary Counter** — counts 0x0 to 0xF driving a 7-segment display
+- **Wave Simulation** — wave moving using the ROTATE instruction
+- **Conway's Game of Life** — toroidal grid with a preloaded glider pattern
+- **Snake** — real-time game with score, speed scaling, and win state
+
+---
 ## Usage Guide
 
 Here's a minimal version to run a code in the Brookshear machine simulator.
