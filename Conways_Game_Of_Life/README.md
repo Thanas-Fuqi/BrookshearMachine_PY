@@ -34,7 +34,7 @@ In this simulation, every single bit in the 64-byte display represents a living 
 To ensure the internal library links are handled correctly, run this command from the root folder:
 
 ```bash
-python -m Connways_Game_Of_Life.Cellular_Automata_ML
+python -m Conways_Game_Of_Life.Cellular_Automata_ML
 ```
 
 ---
