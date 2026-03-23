@@ -6,7 +6,6 @@ delay = 1/10 # Delayed printing (~10 fps)
 time_start = time.perf_counter() # Global time
 
 # ------------ DEBUG OPTIONS ------------
-cpu.ROWS, cpu.COLS = 11, 20 # Terminal xy
 cpu.debug = False # Disable debuging mode
 
 def _display(n, _, __, display_top, ___):

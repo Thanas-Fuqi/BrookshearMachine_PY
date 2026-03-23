@@ -5,7 +5,6 @@ cpu = Machine() # Init a machine instance
 time_start = time.perf_counter() # Global time
 
 # ------------ DEBUG OPTIONS ------------
-cpu.ROWS, cpu.COLS = 12, 20 # Terminal xy
 cpu.debug = False # Disable debuging mode
 
 def _listener():
