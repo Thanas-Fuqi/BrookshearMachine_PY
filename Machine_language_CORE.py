@@ -99,10 +99,10 @@ class Machine():
 
   def _jump(self, o1, o2, o3, next_byte, code):
     if self.register[0] == self.register[o1]:
-      self.log(self.PC-2,":",code,": Jumped successfully to Memory adress",next_byte)
+      self.log(self.PC-2,":",code,": Jumped successfully to Memory address",next_byte)
       self.PC = next_byte
     else:
-      self.log(self.PC-2,":",code,": Failed to jump to Memory adress",next_byte)
+      self.log(self.PC-2,":",code,": Failed to jump to Memory address",next_byte)
 
   def _halt(self, _, __, ___, ____, code):
     self.log(self.PC-2,":",code,": Code halted without errors")
@@ -134,13 +134,13 @@ class Machine():
         break
 
   def load(self, hex_string):
-    # --- Cleans and loads a hex string into memory. ---
+    # --- Cleans and loads a hex string into memory ---
     # Remove comments and whitespace
     if "\n" in hex_string:
       lines = hex_string.splitlines()
 
       cleaned = []
-      for line in lines: # remove ; AND space
+      for line in lines: # remove ';' AND space
         line = line.split(";")[0].strip()
         if line: # Skip empty lines
           cleaned.append(line)
@@ -151,3 +151,27 @@ class Machine():
     for i in range(0, len(hex_string), 2):
       self.memory[load_i] = int(hex_string[i:i+2], 16)
       load_i = (load_i + 1) & 0xFF
+
+  # -------- DEBUG TOOLS (DUMPS) --------
+  # RUN in root python -i -m folder.file
+  def memory_dump(self):
+    with open("memory_dump.txt", "w") as f:
+      col_header = "   "+"  ".join(f"{c:2X}" for c in range(16))
+      reg_row = "   "+"  ".join(f"{self.register[c]:02X}" for c in range(16))
+
+      mem_rows = "\n".join(
+        f"{r:X}  " + "  ".join(f"{self.memory[r*16 + c]:02X}" for c in range(16)) for r in range(16)
+      )
+
+      f.write(col_header + "\n")
+      f.write(reg_row + "\n\n")
+      
+      f.write(col_header + "\n")
+      f.write(mem_rows)
+
+  def log_dump(self):
+    if self.debug:
+      with open("log_dump.txt", "w") as f:
+        f.writelines(f"{line}\n" for line in self.log_buffer)
+    else:
+      print("log_dump() method requires debug = True!")

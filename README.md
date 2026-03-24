@@ -91,4 +91,28 @@ cpu.ISA[0xD] = _NEW_ISA_OPERATION
 ```
 
 ---
+## Debug Tools
+
+Two dump utilities are available for inspecting machine state after execution.
+```python
+# Dumps memory and registers to memory_dump.txt as hex grid
+cpu.memory_dump()
+
+# Dumps log_buffer to log_dump.txt (requires debug=True)
+cpu.log_dump()
+```
+
+### memory_dump.txt layout
+```
+     0  1  2 ...  F  ← Registers (r0 -> rF)
+    XX XX XX ... XX  ← register values hex
+
+    0  1   2 ...  F  ← memory indices (0 -> F)
+0   XX XX XX ... XX  ← 0x00 -> 0x0F
+1   XX XX XX ... XX
+...
+F   XX XX XX ... XX  ← 0xF0 -> 0xFF
+```
+
+---
 <p align="center"><sub>Inspired by Glenn Brookshear's CS: An Overview (11th Ed).<br>Copyright © Thanas Fuqi 2026</sub></p>
