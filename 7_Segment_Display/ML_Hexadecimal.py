@@ -10,7 +10,7 @@ cpu.ROWS, cpu.COLS = 13, 20 # Terminal xy
 
 def _display(n, _, __, display_top, ___):
   global time_start # Use timer
-  print(f"\033[1;1H┌{'─'*16}┐")
+  print(f"\033[1;1H┌────────────────┐")
 
   for i in range(n):
     binary = f"{cpu.memory[display_top]:08b}" # 8 Bit
@@ -18,7 +18,7 @@ def _display(n, _, __, display_top, ___):
     print(f"\033[{i+2};1H│{row_str}│")
     display_top = (display_top + 1) & 0xFF
 
-  print(f"\033[{n+2};1H└{'─'*16}┘")
+  print(f"\033[{n+2};1H└────────────────┘")
 
   elapsed = time.perf_counter() - time_start
   time.sleep(max(0, delay - elapsed)) # 0 if negative
