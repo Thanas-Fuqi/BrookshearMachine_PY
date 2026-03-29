@@ -37,9 +37,9 @@ class Machine():
     formatted = []
     for a in args:
       if isinstance(a, int): # If a number, format 2-digit hex
-        formatted.append(f"{a:02X}")
+        formatted.append(f"\033[{'96' if a <= 0x100 else '0'}m{a:02X}\033[0m")
       else:
-        formatted.append(str(a))  # Leave strings as-is
+        formatted.append(f"\033[{'92' if len(a) == 4 else '0'}m{str(a)}\033[0m")
     # The formatted string to print
     msg = " ".join(formatted)
 
@@ -52,7 +52,7 @@ class Machine():
       visible_logs = self.log_buffer[-self.ROWS:]
 
       for i, line in enumerate(visible_logs):
-        print(f"\033[{i+1};{self.COLS}H\033[92m{line}\033[0m\033[K",end="")
+        print(f"\033[{i+1};{self.COLS}H{line}\033[K",end="")
 
       print("", end="", flush=True)
 
@@ -93,7 +93,7 @@ class Machine():
     self.register[o1] = self.register[o2] ^ self.register[o3]
 
   def _rotate(self, o1, _, o3, __, code):
-    self.log(self.PC-2,":",code,": Rotated bits of register",o1,",",o3,"times to the right")
+    self.log(self.PC-2,":",code,": ROR bits of register",o1,",",o3,"times to the right")
     n, v = o3 % 8, self.register[o1]
     self.register[o1] = ((v >> n) | (v << (8 - n))) & 0xFF
 
@@ -152,7 +152,7 @@ class Machine():
       self.memory[load_i] = int(hex_string[i:i+2], 16)
       load_i = (load_i + 1) & 0xFF
 
-  # -------- DEBUG TOOLS (DUMPS) --------
+  # --- DEBUG TOOLS (DUMPS) ---
   # RUN in root python -i -m folder.file
   def memory_dump(self):
     with open("memory_dump.txt", "w") as f:
