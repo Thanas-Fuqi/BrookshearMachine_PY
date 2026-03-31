@@ -64,8 +64,8 @@ class Machine():
 
   # --- The main execution loop ---
   def run(self):
-    _default_op = lambda *_: (self.log(f"{self.PC-2:02X}[G] : Unknown opcode ... [D]"), self.__setattr__("halted", True))
-    _default_lo = lambda *_: self.log(f"{self.PC-2:02X}[G] : No logs where found ...[D]")
+    _default_op = lambda *_: (self.log(f"Error : [M]Unknown[G] opcode ... [D]"), self.__setattr__("halted", True))
+    _default_lo = lambda *_: f"{self.PC-2:02X}[G] : [M]No[G] logs where found ...[D]" # Default entry if no logs
 
     while not self.halted:
       # 1. Fetch
