@@ -47,9 +47,7 @@ def _display(n, _, __, display_top):
   time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
-cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X} : {code} : Displayed {o1} square bytes from memory {nb:02X}"
 cpu.ISA[0xD] = lambda R, _, __, mask: cpu.register.__setitem__(R, random.randint(0, 0xFF) & mask)
-cpu.log_dispatcher[0xD] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X} : {code} : Stored in register {o1:X} a random x &{nb:02X}"
 
 Snake_Game = """
 2EC1 ; 00 LOAD TOP_ARRAY

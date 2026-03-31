@@ -31,7 +31,6 @@ def _display(n, _, __, display_top):
   time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
-cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X} : {code} : Displayed {o1} bytes from memory {nb:02X}"
 
 Cellular_Automata = """
 2080 ; 00 + LOAD GLIDER NO.0

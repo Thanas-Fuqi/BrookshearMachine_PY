@@ -31,7 +31,7 @@ def _display(n, _, __, display_top):
   time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
-cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X} : {code} : Displayed {o1} bytes from memory {nb:02X}"
+cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X}[G] : [C]{code}[G] : Displayed [R]{o1:X}[G] bytes from memory [M]{nb:02X}[D]"
 
 Wave_Loop = """
 2FCC ; 00 LOAD MASK (11001100)
