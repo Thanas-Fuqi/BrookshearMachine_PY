@@ -11,105 +11,54 @@ class Machine():
 
     self.debug = True # Enable Printing by default
     self.log_buffer = [] # Hold every printed line
-    self.ROWS = 0 # Start with all rows printed
-    self.COLS = 1 # Start from the first column
+    self.ROWS, self.COLS = 0, 1 # Start terminal xy
 
-    self.ISA = { # OPCODE : ACTION
-      0x1: self._load_mem,
-      0x2: self._load_val,
-      0x3: self._store,
-      0x4: self._move,
-      0x5: self._add,
-      #0x6: self._add_float,
-      0x7: self._or,
-      0x8: self._and,
-      0x9: self._xor,
-      0xA: self._rotate,
-      0xB: self._jump,
-      0xC: self._halt,
+    self.ISA = { # OPCODE : lambda x: ACTION x
+      0x1: lambda o1, _, __, nb: self.register.__setitem__(o1, self.memory[nb]),
+      0x2: lambda o1, _, __, nb: self.register.__setitem__(o1, nb),
+      0x3: lambda o1, _, __, nb: self.memory.__setitem__(nb, self.register[o1]),
+      0x4: lambda _, o2, o3, __: self.register.__setitem__(o3, self.register[o2]),
+      0x5: lambda o1, o2, o3, _: self.register.__setitem__(o1, (self.register[o2] + self.register[o3]) & 0xFF),
+      0x7: lambda o1, o2, o3, _: self.register.__setitem__(o1, self.register[o2] | self.register[o3]),
+      0x8: lambda o1, o2, o3, _: self.register.__setitem__(o1, self.register[o2] & self.register[o3]),
+      0x9: lambda o1, o2, o3, _: self.register.__setitem__(o1, self.register[o2] ^ self.register[o3]),
+      0xA: lambda o1, _, o3, __: self.register.__setitem__(o1, ((self.register[o1] >> (o3 % 8)) | (self.register[o1] << (8 - (o3 % 8)))) & 0xFF),
+      0xB: lambda o1, _, __, nb: self.__setattr__('PC', nb) if self.register[0] == self.register[o1] else None,
+      0xC: lambda _, __, ___, ____: self.__setattr__('halted', True),
+    }
+
+    self.log_dispatcher = {
+      0x1: lambda o1, _, __, nb, code: f"{self.PC-2:02X} : {code} : Loaded register {o1:X} with bit pattern of memory {nb:02X}",
+      0x2: lambda o1, _, __, nb, code: f"{self.PC-2:02X} : {code} : Loaded register {o1:X} with bit pattern {nb:02X}",
+      0x3: lambda o1, _, __, nb, code: f"{self.PC-2:02X} : {code} : Loaded memory {nb:02X} with bit pattern of register {o1:X}",
+      0x4: lambda _, o2, o3, __, code: f"{self.PC-2:02X} : {code} : Copied the bit pattern of register {o2:X} to register {o3:X}",
+      0x5: lambda o1, o2, o3, _, code: f"{self.PC-2:02X} : {code} : Sum-ed registers {o2:X} and {o3:X}, added the result to {o1:X}",
+      0x7: lambda o1, o2, o3, _, code: f"{self.PC-2:02X} : {code} : OR--ed registers {o2:X} and {o3:X}, added the result to {o1:X}",
+      0x8: lambda o1, o2, o3, _, code: f"{self.PC-2:02X} : {code} : AND-ed registers {o2:X} and {o3:X}, added the result to {o1:X}",
+      0x9: lambda o1, o2, o3, _, code: f"{self.PC-2:02X} : {code} : XOR-ed registers {o2:X} and {o3:X}, added the result to {o1:X}",
+      0xA: lambda o1, _, o3, __, code: f"{self.PC-2:02X} : {code} : ROR bits of register {o1:X} , {o3} times to the right",
+      0xB: lambda _, __, ___, nb, code: f"{self.PC-2:02X} : {code} : Attemped to jump to memory address {nb:02X}",
+      0xC: lambda _, __, ___, ____, code: f"{self.PC-2:02X} : {code} : Code halted without errors",
     }
 
   # --- Printing Logic ---
   def log(self, *args):
-    if not self.debug:
-      return # Skip if not debug mode
+    msg = " ".join(args)
+    self.log_buffer.append(msg)
 
-    formatted = []
-    for a in args:
-      if isinstance(a, int): # If a number, format 2-digit hex
-        formatted.append(f"\033[{'96' if a <= 0x100 else '0'}m{a:02X}\033[0m")
-      else:
-        formatted.append(f"\033[{'92' if len(a) == 4 else '0'}m{str(a)}\033[0m")
-    # The formatted string to print
-    msg = " ".join(formatted)
-
-    # If not constrained print all
     if self.ROWS == 0:
-      print(msg) # Basic Printing
-    # Otherwise print "ROWS" rows
+      print(msg)
     else:
-      self.log_buffer.append(msg)
-      visible_logs = self.log_buffer[-self.ROWS:]
-
-      for i, line in enumerate(visible_logs):
+      for i, line in enumerate(self.log_buffer[-self.ROWS:]):
         print(f"\033[{i+1};{self.COLS}H{line}\033[K",end="")
 
       print("", end="", flush=True)
 
-  # operation(o1, o2, o3, next_byte, code)
-  # --- Instruction Set Functions ---
-  def _load_mem(self, o1, o2, o3, next_byte, code):
-    self.log(self.PC-2,":",code,": Loaded register",o1,"with bit pattern of Memory",next_byte)
-    self.register[o1] = self.memory[next_byte]
-
-  def _load_val(self, o1, o2, o3, next_byte, code):
-    self.log(self.PC-2,":",code,": Loaded register", o1, "with bit pattern", next_byte)
-    self.register[o1] = next_byte
-
-  def _store(self, o1, o2, o3, next_byte, code):
-    self.log(self.PC-2,":",code,": Loaded Memory",next_byte,"with bit pattern of register",o1)
-    self.memory[next_byte] = self.register[o1]
-
-  def _move(self, _, o2, o3, __, code):
-    self.log(self.PC-2,":",code,": Copied the bit pattern of register",o2,"to register",o3)
-    self.register[o3] = self.register[o2]
-
-  def _add(self, o1, o2, o3, _, code):
-    self.log(self.PC-2,":",code,": Sum-ed registers",o2,"and",o3,"added the result to",o1)
-    self.register[o1] = (self.register[o2] + self.register[o3]) & 0xFF
-
-  #def _add_float(self, o1, o2, o3, next_byte, code):
-
-  def _or(self, o1, o2, o3, _, code):
-    self.log(self.PC-2,":",code,": OR-ed registers",o2,"and",o3,"added the result to",o1)
-    self.register[o1] = self.register[o2] | self.register[o3]
-
-  def _and(self, o1, o2, o3, _, code):
-    self.log(self.PC-2,":",code,": AND-ed registers",o2,"and",o3,"added the result to",o1)
-    self.register[o1] = self.register[o2] & self.register[o3]
-
-  def _xor(self, o1, o2, o3, _, code):
-    self.log(self.PC-2,":",code,": XOR-ed registers",o2,"and",o3,"added the result to",o1)
-    self.register[o1] = self.register[o2] ^ self.register[o3]
-
-  def _rotate(self, o1, _, o3, __, code):
-    self.log(self.PC-2,":",code,": ROR bits of register",o1,",",o3,"times to the right")
-    n, v = o3 % 8, self.register[o1]
-    self.register[o1] = ((v >> n) | (v << (8 - n))) & 0xFF
-
-  def _jump(self, o1, o2, o3, next_byte, code):
-    if self.register[0] == self.register[o1]:
-      self.log(self.PC-2,":",code,": Jumped successfully to Memory address",next_byte)
-      self.PC = next_byte
-    else:
-      self.log(self.PC-2,":",code,": Failed to jump to Memory address",next_byte)
-
-  def _halt(self, _, __, ___, ____, code):
-    self.log(self.PC-2,":",code,": Code halted without errors")
-    self.halted = True
-
   # --- The main execution loop ---
-  def run(self):    
+  def run(self):
+    _default_op = lambda *_: (self.log(f"{self.PC-2:02X} : Unknown opcode"), self.__setattr__('halted', True))
+    _default_lo = lambda *_: f"{self.PC-2:02X} : No logs where found for this opcode!"
+
     while not self.halted:
       # 1. Fetch
       current_byte = self.memory[self.PC]
@@ -121,53 +70,37 @@ class Machine():
       o2 = (next_byte >> 4) & 0xF
       o3 = next_byte & 0xF
 
-      code = f"{((current_byte << 8) | next_byte):04X}"
-      
       # 3. Execute
-      operation = self.ISA.get(o0)
+      operation = self.ISA.get(o0, _default_op)
       self.PC = (self.PC + 2) & 0xFF
 
-      if operation:
-        operation(o1, o2, o3, next_byte, code)
-      else:
-        self.log(self.PC-2,":",code,": Code halted with errors !")
-        break
+      if self.debug: # If debug mode print text
+        code = f"{((current_byte << 8) | next_byte):04X}"
+        thisLog = self.log_dispatcher.get(o0, _default_lo)
+        self.log(thisLog(o1, o2, o3, next_byte, code))
+
+      operation(o1, o2, o3, next_byte)
 
   def load(self, hex_string):
-    # --- Cleans and loads a hex string into memory ---
-    # Remove comments and whitespace
-    if "\n" in hex_string:
-      lines = hex_string.splitlines()
+    hex_string = "".join( # Remove commented ";"
+      line.split(";")[0].strip()
+      for line in hex_string.splitlines()
+    )
 
-      cleaned = []
-      for line in lines: # remove ';' AND space
-        line = line.split(";")[0].strip()
-        if line: # Skip empty lines
-          cleaned.append(line)
-
-      hex_string = "".join(cleaned)
-
-    load_i = self.PC
-    for i in range(0, len(hex_string), 2):
-      self.memory[load_i] = int(hex_string[i:i+2], 16)
-      load_i = (load_i + 1) & 0xFF
+    for i, byte in enumerate(bytes.fromhex(hex_string)):
+      self.memory[(self.PC + i) & 0xFF] = byte
 
   # --- DEBUG TOOLS (DUMPS) ---
   # RUN in root python -i -m folder.file
   def memory_dump(self):
+    cols = "   " + "  ".join(f"{c:2X}" for c in range(16))
+    regs = "   " + "  ".join(f"{self.register[c]:02X}" for c in range(16))
+    mem  = "\n".join(
+      f"{r:X}  " + "  ".join(f"{self.memory[r*16+c]:02X}" for c in range(16)) for r in range(16)
+    )
+
     with open("memory_dump.txt", "w") as f:
-      col_header = "   "+"  ".join(f"{c:2X}" for c in range(16))
-      reg_row = "   "+"  ".join(f"{self.register[c]:02X}" for c in range(16))
-
-      mem_rows = "\n".join(
-        f"{r:X}  " + "  ".join(f"{self.memory[r*16 + c]:02X}" for c in range(16)) for r in range(16)
-      )
-
-      f.write(col_header + "\n")
-      f.write(reg_row + "\n\n")
-      
-      f.write(col_header + "\n")
-      f.write(mem_rows)
+      f.write(f"{cols}\n{regs}\n\n{cols}\n{mem}")
 
   def log_dump(self):
     if self.debug:

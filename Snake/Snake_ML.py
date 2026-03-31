@@ -15,14 +15,9 @@ def _listener():
 
 threading.Thread(target=_listener, daemon=True).start()
 
-def _random(R, _, __, mask, ___):
-  cpu.register[R] = random.randint(0, 0xFF) & mask
-
-cpu.ISA[0xD] = _random
-
-def _display(n, _, __, display_top, ___):
+def _display(n, _, __, display_top):
   global time_start
-  print("\033[1;1H", end="") 
+  print("\033[1;1H", end="")
   output = []
 
   score_text = "FINISH! RESPECT++" if cpu.register[0xC] == 62 else f"SNAKE LENGTH -> {cpu.register[0xC]+1:02d}"
@@ -52,6 +47,9 @@ def _display(n, _, __, display_top, ___):
   time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
+cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X} : {code} : Displayed {o1} square bytes from memory {nb:02X}"
+cpu.ISA[0xD] = lambda R, _, __, mask: cpu.register.__setitem__(R, random.randint(0, 0xFF) & mask)
+cpu.log_dispatcher[0xD] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X} : {code} : Stored in register {o1:X} a random x &{nb:02X}"
 
 Snake_Game = """
 2EC1 ; 00 LOAD TOP_ARRAY

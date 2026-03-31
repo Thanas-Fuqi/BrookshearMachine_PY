@@ -8,24 +8,30 @@ time_start = time.perf_counter() # Global time
 # ------------ DEBUG OPTIONS ------------
 cpu.ROWS, cpu.COLS = 13, 20 # Terminal xy
 
-def _display(n, _, __, display_top, ___):
+def _display(n, _, __, display_top):
   global time_start # Use timer
-  print(f"\033[1;1H┌────────────────┐")
+  print("\033[1;1H", end="")
+  output = []
+
+  output.append("┌────────────────┐")
 
   for i in range(n):
     binary = f"{cpu.memory[display_top]:08b}" # 8 Bit
     row_str = ''.join('██' if bit == '1' else '  ' for bit in binary)
-    print(f"\033[{i+2};1H│{row_str}│")
+    output.append(f"\n│{row_str}│")
     display_top = (display_top + 1) & 0xFF
 
-  print(f"\033[{n+2};1H└────────────────┘")
+  output.append("\n└────────────────┘")
+  print("".join(output), end="", flush=True)
 
   elapsed = time.perf_counter() - time_start
+  print(f"\nTime: {elapsed:.6f} sec")
+
   time.sleep(max(0, delay - elapsed)) # 0 if negative
-  print(f"\033[{n+3};1HTime: {elapsed:.6f} sec")
   time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
+cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X} : {code} : Displayed {o1} bytes from memory {nb:02X}"
 
 Wave_Loop = """
 2FCC ; 00 LOAD MASK (11001100)
