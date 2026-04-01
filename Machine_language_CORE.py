@@ -14,7 +14,6 @@ class Machine():
     self.ROWS, self.COLS = 0, 1 # Start terminal xy
 
     self.color = {
-      "D" : "\033[0m",                # [D]efault -> reset
       "R" : "\033[38;2;0;188;212m",   # [R]egister -> teal cyan
       "C" : "\033[38;2;105;255;71m",  # [C]ode -> neon green
       "M" : "\033[38;2;255;64;129m",  # [M]emory -> hot red
@@ -36,24 +35,24 @@ class Machine():
     }
 
     self.log_dispatcher = {
-      0x1: lambda o1, _, __, nb, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Loaded register [R]{o1:X}[G] with bit pattern of memory [M]{nb:02X}[D]",
-      0x2: lambda o1, _, __, nb, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Loaded register [R]{o1:X}[G] with bit pattern [M]{nb:02X}[D]",
-      0x3: lambda o1, _, __, nb, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Loaded memory [M]{nb:02X}[G] with bit pattern of register [R]{o1:X}[D]",
-      0x4: lambda _, o2, o3, __, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Copied the bit pattern of register [R]{o2:X}[G] to register [R]{o3:X}[D]",
-      0x5: lambda o1, o2, o3, _, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Sum-ed registers [R]{o2:X}[G] and [R]{o3:X}[G], place the result in [R]{o1:X}[D]",
-      0x7: lambda o1, o2, o3, _, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : OR--ed registers [R]{o2:X}[G] and [R]{o3:X}[G], place the result in [R]{o1:X}[D]",
-      0x8: lambda o1, o2, o3, _, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : AND-ed registers [R]{o2:X}[G] and [R]{o3:X}[G], place the result in [R]{o1:X}[D]",
-      0x9: lambda o1, o2, o3, _, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : XOR-ed registers [R]{o2:X}[G] and [R]{o3:X}[G], place the result in [R]{o1:X}[D]",
-      0xA: lambda o1, _, o3, __, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : ROR bits of register [R]{o1:X}[G] , [R]{o3:X}[G] times to the right[D]",
-      0xB: lambda _, __, ___, nb, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Attempted to jump to memory address [M]{nb:02X}[D]",
-      0xC: lambda _, __, ___, ____, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Code halted without errors[D]",
+      0x1: lambda o1, _, __, nb, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Loaded register [R]{o1:X}[G] with bit pattern of memory [M]{nb:02X}",
+      0x2: lambda o1, _, __, nb, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Loaded register [R]{o1:X}[G] with bit pattern [M]{nb:02X}",
+      0x3: lambda o1, _, __, nb, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Loaded memory [M]{nb:02X}[G] with bit pattern of register [R]{o1:X}",
+      0x4: lambda _, o2, o3, __, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Copied the bit pattern of register [R]{o2:X}[G] to register [R]{o3:X}",
+      0x5: lambda o1, o2, o3, _, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Sum-ed registers [R]{o2:X}[G] and [R]{o3:X}[G], place the result in [R]{o1:X}",
+      0x7: lambda o1, o2, o3, _, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : OR--ed registers [R]{o2:X}[G] and [R]{o3:X}[G], place the result in [R]{o1:X}",
+      0x8: lambda o1, o2, o3, _, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : AND-ed registers [R]{o2:X}[G] and [R]{o3:X}[G], place the result in [R]{o1:X}",
+      0x9: lambda o1, o2, o3, _, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : XOR-ed registers [R]{o2:X}[G] and [R]{o3:X}[G], place the result in [R]{o1:X}",
+      0xA: lambda o1, _, o3, __, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : ROR bits of register [R]{o1:X}[G] , [R]{o3:X}[G] times to the right",
+      0xB: lambda _, __, ___, nb, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Attempted to jump to memory address [M]{nb:02X}",
+      0xC: lambda _, __, ___, ____, code: f"{self.PC-2:02X}[G] : [C]{code}[G] : Code halted without errors",
     }
 
   # --- Printing Logic ---
   def log(self, args):
     apply_color = lambda m: self.color.get(m.group(1), "")
-    msg = re.sub(r'\[(\w+)\]', apply_color, args)
-    self.log_buffer.append(msg)
+    msg = re.sub(r'\[(\w+)\]', apply_color, args+"\033[0m")
+    self.log_buffer.append(msg) # Replace tags with colors
 
     if self.ROWS == 0:
       print(msg)
@@ -64,8 +63,8 @@ class Machine():
 
   # --- The main execution loop ---
   def run(self):
-    _default_op = lambda *_: (self.log(f"Error : [M]Unknown[G] opcode ... [D]"), self.__setattr__("halted", True))
-    _default_lo = lambda *_: f"{self.PC-2:02X}[G] : [M]No[G] logs where found ...[D]" # Default entry if no logs
+    _default_op = lambda *_: (self.log(f"Error : [M]Unknown[G] opcode ..."), self.__setattr__("halted", True))
+    _default_lo = lambda *_: f"{self.PC-2:02X}[G] : [M]No[G] logs where found ..." # Default entry if no logs
 
     while not self.halted:
       # 1. Fetch
@@ -116,4 +115,4 @@ class Machine():
       with open("log_dump.txt", "w") as f:  # Export all logs
         f.writelines(clean.sub("", f"{line}\n") for line in self.log_buffer)
     else:
-      print(f"{self.color['R']}log_dump(){self.color['G']} method requires {self.color['M']}debug = True{self.color['D']}")
+      print(f"{self.color['R']}log_dump(){self.color['G']} method requires {self.color['M']}debug = True")

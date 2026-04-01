@@ -31,7 +31,7 @@ def _display(n, _, __, display_top):
   time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
-cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X}[G] : [C]{code}[G] : Displayed [R]{o1:X}[G] bytes from memory [M]{nb:02X}[D]"
+cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X}[G] : [C]{code}[G] : Displayed [R]{o1:X}[G] bytes from memory [M]{nb:02X}"
 
 Loop_7_Segments = """
 20FC ; 00 NUM_0 (1111 1100)
