@@ -25,7 +25,7 @@ def _display(n, _, __, display_top):
   print("".join(output), end="", flush=True)
 
   elapsed = time.perf_counter() - time_start
-  print(f"\nTime: {elapsed:.6f} sec")
+  print(f"\nTime: {elapsed:.15f}"[:15] + " sec")
 
   time.sleep(max(0, delay - elapsed)) # 0 if negative
   time_start = time.perf_counter()
@@ -168,5 +168,4 @@ print("""
 \033[30;47m└────────────────────────────┘\033[0m
 """)
 input("PRESS ANY KEY ... ")
-print("\033[2J\033[1;1H", end="")
-cpu.run() # Clear and run emulation
+cpu.run() # Run emulation

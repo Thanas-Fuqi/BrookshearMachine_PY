@@ -6,7 +6,7 @@ delay = 1/10 # Delayed printing (~10 fps)
 time_start = time.perf_counter() # Global time
 
 # ------------ DEBUG OPTIONS ------------
-cpu.ROWS, cpu.COLS = 13, 20 # Terminal xy
+cpu.debug = False # Disable debuging mode
 
 def _display(n, _, __, display_top):
   global time_start # Use timer
@@ -25,13 +25,12 @@ def _display(n, _, __, display_top):
   print("".join(output), end="", flush=True)
 
   elapsed = time.perf_counter() - time_start
-  print(f"\nTime: {elapsed:.6f} sec")
+  print(f"\nTime: {elapsed:.15f}"[:15] + " sec")
 
   time.sleep(max(0, delay - elapsed)) # 0 if negative
   time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
-cpu.log_dispatcher[0xF] = lambda o1, _, __, nb, code: f"{cpu.PC-2:02X}[G] : [C]{code}[G] : Displayed [R]{o1:X}[G] bytes from memory [M]{nb:02X}"
 
 Wave_Loop = """
 2FCC ; 00 LOAD MASK (11001100)
@@ -67,5 +66,4 @@ print("""
 └────────────────────────────────┘
 """)
 input("PRESS ANY KEY ... ")
-print("\033[2J\033[1;1H", end="")
-cpu.run() # Clear and run emulation
+cpu.run() # Run emulation
