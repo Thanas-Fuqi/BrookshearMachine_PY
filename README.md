@@ -83,7 +83,7 @@ Also the user is able to change the ISA as needed.
 
 ```python
 # You can ignore inputs given by either (_) or (*args)
-def _NEW_ISA_OPERATION(o1, o2, o3, next_byte, code):
+def _NEW_ISA_OPERATION(o1, o2, o3, next_byte):
     """ YOUR ISA LOGIC HERE """
 
 # The empty opcodes are 0xD, 0xE, 0xF
