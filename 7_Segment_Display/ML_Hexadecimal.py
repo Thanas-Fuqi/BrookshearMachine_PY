@@ -11,9 +11,7 @@ cpu.debug = False # Disable debuging mode
 def _display(n, _, __, display_top):
   global time_start # Use timer
   print("\033[1;1H", end="")
-  output = []
-
-  output.append("┌────────────────┐")
+  output = ["┌────────────────┐"]
 
   for i in range(n):
     binary = f"{cpu.memory[display_top]:08b}" # 8 Bit
@@ -166,14 +164,4 @@ B0D2 ; D8 JMP :LOAD_NUM:
 """
 
 cpu.load(Loop_7_Segments)
-print("""
-┌────────────────────────┐
-│ █    █  █▀▀▀▀  ▀▄   ▄▀ │
-│ █    █  █       ▀▄ ▄▀  │
-│ █■■■■█  █■■■■    ▄▀▄   │
-│ █    █  █       ▄▀ ▀▄  │
-│ █    █  █▄▄▄▄  ▄▀   ▀▄ │
-└────────────────────────┘
-""")
-input("PRESS ANY KEY ... ")
 cpu.run() # Run emulation

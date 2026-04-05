@@ -18,11 +18,8 @@ threading.Thread(target=_listener, daemon=True).start()
 def _display(n, _, __, display_top):
   global time_start
   print("\033[1;1H", end="")
-  output = []
 
-  score_text = "FINISH! RESPECT++" if cpu.register[0xC] == 62 else f"SNAKE LENGTH -> {cpu.register[0xC]+1:02d}"
-  output.append(score_text)
-
+  output = ["FINISH! RESPECT++" if cpu.register[0xC] == 62 else f"SNAKE LENGTH -> {cpu.register[0xC]+1:02d}"]
   output.append(f"\n┌{'─' * (n*2)}┐\n")
   grid = [["  " for _ in range(n)] for _ in range(n)]
 
@@ -40,7 +37,7 @@ def _display(n, _, __, display_top):
   print("".join(output), end="", flush=True)
 
   elapsed = time.perf_counter() - time_start
-  print(f"\nTime: {elapsed:.15f}"[:15] + " sec")
+  print(f"Time: {elapsed:.15f}"[:15] + " sec")
 
   delay = 1 / (7 + min(cpu.register[0xC] // 5, 6))
   time.sleep(max(0, delay - elapsed))
@@ -174,14 +171,4 @@ C000 ; B8 [BREAK]
 """
 
 cpu.load(Snake_Game)
-print("""
-\033[91m┌────────────────────────────────────┐
-│\033[0m ▄▀▀▀▄  █▀▄  █  █▀▀▀█  █  ▄▀  █▀▀▀▀ \033[91m│
-│\033[0m █      █ ▀▄ █  █   █  █ ▄▀   █     \033[91m│
-│\033[0m ▀■■■▄  █  ▀▄█  █■■■█  █▄▀    █■■■■ \033[91m│
-│\033[0m     █  █   ▀█  █   █  █ ▀▄   █     \033[91m│
-│\033[0m ▀▄▄▄▀  █    █  █   █  █  ▀▄  █▄▄▄▄ \033[91m│
-└────────────────────────────────────┘\033[0m
-""")
-input("PRESS ANY KEY ... ")
-cpu.run() # Run emulation
+cpu.run() # Run Sim

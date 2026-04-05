@@ -98,8 +98,6 @@ class Machine():
       print(f"{prefix}Error : {self.color['M']}Unknown opcode found\033[0m")
 
   def load(self, hex_string):
-    print("\033[2J\033[1;1H", end="")
-
     hex_string = "".join( # Remove commented ";"
       line.split(";")[0].strip() # Remove new lines
       for line in hex_string.splitlines()
@@ -107,6 +105,20 @@ class Machine():
 
     for i, byte in enumerate(bytes.fromhex(hex_string)):
       self.memory[(self.PC + i) & 0xFF] = byte
+
+    print("\033[2J\033[1;1H\033[91m", end="")
+    print(f"{'Own Native System':^{35}}")
+    print("┌─────────────────────────────────┐")
+    print(" │\033[0m  ▄█████▄  ███▄▄▄▄    ▄███████ \033[91m│")
+    print(" │\033[0m ███   ███ ███▀▀▀██▄ ███   ███ \033[91m│")
+    print(" │\033[0m ███   ███ ███   ███ ███   █▀  \033[91m│")
+    print(" │\033[0m ███   ███ ███   ███ ███       \033[91m│")
+    print(" │\033[0m ███   ███ ███   ███ ▀████████ \033[91m│")
+    print(" │\033[0m ███   ███ ███   ███       ███ \033[91m│")
+    print(" │\033[0m ███   ███ ███   ███  ▄█   ███ \033[91m│")
+    print(" │\033[0m  ▀█████▀   ▀█   █▀ ▄███████▀  \033[91m│")
+    print("└─────────────────────────────────┘\033[0m")
+    input(" -> FINISHED LOADING, PRESS ENTER")
 
   # --- DEBUG TOOLS (DUMPS) ---
   # RUN in root python -i -m folder.file

@@ -10,10 +10,8 @@ cpu.debug = False # Disable debuging mode
 
 def _display(n, _, __, display_top):
   global time_start # Use timer
-  print("\033[30;47m\033[1;1H", end="")
-  output = [] # Black on white output
-
-  output.append("┌────────────────┐")
+  print("\033[1;1H", end="")
+  output = ["┌────────────────┐"]
 
   for i in range(n):
     binary = f"{cpu.memory[display_top]:08b}" # 8 Bit
@@ -21,7 +19,7 @@ def _display(n, _, __, display_top):
     output.append(f"\n│{row_str}│")
     display_top = (display_top + 1) & 0xFF
 
-  output.append("\n└────────────────┘\033[0m")
+  output.append("\n└────────────────┘")
   print("".join(output), end="", flush=True)
 
   elapsed = time.perf_counter() - time_start
@@ -157,15 +155,4 @@ B098 ; BA JMP :RESET_G_J:
 """
 
 cpu.load(Cellular_Automata)
-print("""
-\033[30;47m     CONWAY'S GAME OF ...     \033[0m
-\033[30;47m┌────────────────────────────┐\033[0m
-\033[30;47m│ █      ▀▀█▀▀  █▀▀▀▀  █▀▀▀▀ │\033[0m
-\033[30;47m│ █        █    █      █     │\033[0m
-\033[30;47m│ █        █    █■■■■  █■■■■ │\033[0m
-\033[30;47m│ █        █    █      █     │\033[0m
-\033[30;47m│ █▄▄▄▄  ▄▄█▄▄  █      █▄▄▄▄ │\033[0m
-\033[30;47m└────────────────────────────┘\033[0m
-""")
-input("PRESS ANY KEY ... ")
-cpu.run() # Run emulation
+cpu.run() # Run
