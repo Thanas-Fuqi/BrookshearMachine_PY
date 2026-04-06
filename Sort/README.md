@@ -1,4 +1,3 @@
-"""
 # Brookshear Machine: Sorting Visualizer
 
 <p align="center">
