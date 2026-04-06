@@ -31,7 +31,7 @@ the machine's capabilities:
 
 - **Binary Counter** — counts 0x0 to 0xF driving a 7-segment display
 - **Wave Simulation** — wave moving using the ROTATE instruction
-- **Sorting Visualiser** — Sorts a block values and renders them as bars
+- **Sorting Visualiser** — Sorts a block of values and renders them as bars
 - **Conway's Game of Life** — toroidal grid with a preloaded glider pattern
 - **Snake** — real-time game with score, speed scaling, and win state
 
