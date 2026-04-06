@@ -1,28 +1,23 @@
 # Brookshear Machine Emulator
 ### Inspired by Glenn Brookshear's "Computer Science: An Overview" (11th Edition)
 
-This project is a Python-based implementation of the virtual machine architecture 
-described in Glenn Brookshear's seminal textbook. It simulates a CPU with 16 
-registers and 256 bytes of RAM.
+A Python implementation of the Brookshear virtual machine, simulating a 16-register CPU with 256 bytes of RAM.
 
-**Also included:** A collection of programs that push the 256-byte limit - including 
-a playable Snake game, Conway's Game of Life, and a sorting visualizer, all written 
+**Also included:** A collection of programs that push the 256-byte limit, all written 
 in raw hexadecimal.
+
+**The Challenge:** No assembler. No debugger. No inequality operators. Just hex, 
+bitwise logic, and manually calculated jump offsets. One wrong byte = hours of debugging.
 
 ## Featured Programs
 
-What can you actually build in 256 bytes of hand-written hex? More than you'd think.
-
-| Project | Highlights |
-|---------|------------|
-| [🐍 **Snake**](./Snake/) | Real-time input, collision detection, random food with validation, win state |
-| [🧬 **Conway's Life**](./Conways_Game_Of_Life/) | Toroidal grid, neighbor counting via bit rotation, double buffering |
-| [📊 **Sorting Visualizer**](./Sort/) | Bit-by-bit comparison sort, progress bar, audio feedback |
-| [🔢 **Seven-Segment Display**](./7_Segment_Display/) | Font rendering with bit-testing, cycles through 0-F |
-| [🌊 **Wave Animation**](./Wave_Animation/) | Rotating pattern using self-modifying code |
-
-**The Challenge:** No assembler. No debugger. No comparison operators. Just hex, 
-bitwise logic, and manually calculated jump offsets. One wrong byte = hours of debugging.
+| Project | Demo Preview | Highlights |
+|---------|---------|------------|
+| [🐍 **Snake (186 B)**](./Snake/) | <img src="./Snake/Snake_ML.gif" alt="Demo" height="100"> | Real-time input • Collision logic • RNG + validation • Win state |
+| [🧬 **Conway's Life (188 B)**](./Conways_Game_Of_Life/) | <img src="./Conways_Game_Of_Life/Cellular_Automata_ML.gif" alt="Demo" height="100"> | Toroidal grid • Neighbor counting via bits • Double buffering |
+| [📊 **Sorting Visualizer (66 B)**](./Sort/) | <img src="./Sort/Sort_ML.gif" alt="Demo" height="100"> | Bit-by-bit comparison • Progress bar • Terminal beeps |
+| [🔢 **7-Segment Display (218 B)**](./7_Segment_Display/) | <img src="./7_Segment_Display/ML_Hexadecimal.gif" alt="Demo" height="100"> | Rendering • Bit-testing • 0-F cycle |
+| [🌊 **Wave Animation (28 B)**](./Wave_Animation/) | <img src="./Wave_Animation/ML_Wave_Loop.gif" alt="Demo" height="100"> | Rotating pattern • Self-modifying code |
 
 ---
 ## The Instruction Set Architecture (ISA)
