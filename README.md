@@ -5,6 +5,25 @@ This project is a Python-based implementation of the virtual machine architectur
 described in Glenn Brookshear's seminal textbook. It simulates a CPU with 16 
 registers and 256 bytes of RAM.
 
+**Also included:** A collection of programs that push the 256-byte limit - including 
+a playable Snake game, Conway's Game of Life, and a sorting visualizer, all written 
+in raw hexadecimal.
+
+## Featured Programs
+
+What can you actually build in 256 bytes of hand-written hex? More than you'd think.
+
+| Project | Highlights |
+|---------|------------|
+| [🐍 **Snake**](./Snake/) | Real-time input, collision detection, random food with validation, win state |
+| [🧬 **Conway's Life**](./Conways_Game_Of_Life/) | Toroidal grid, neighbor counting via bit rotation, double buffering |
+| [📊 **Sorting Visualizer**](./Sort/) | Bit-by-bit comparison sort, progress bar, audio feedback |
+| [🔢 **Seven-Segment Display**](./7_Segment_Display/) | Font rendering with bit-testing, cycles through 0-F |
+| [🌊 **Wave Animation**](./Wave_Animation/) | Rotating pattern using self-modifying code |
+
+**The Challenge:** No assembler. No debugger. No comparison operators. Just hex, 
+bitwise logic, and manually calculated jump offsets. One wrong byte = hours of debugging.
+
 ---
 ## The Instruction Set Architecture (ISA)
 
@@ -23,17 +42,6 @@ registers and 256 bytes of RAM.
 | **C** | HALT | Terminate the program execution. |
 
 **Note:** The code expects a hexadecimal value in the format [ **Opcode** | **R** ] [ **X** | **Y** ]. (i.e 1A2B)
-
----
-## Programs
-A collection of programs written in the Brookshear ISA to demonstrate 
-the machine's capabilities:
-
-- **Binary Counter** — counts 0x0 to 0xF driving a 7-segment display
-- **Wave Simulation** — wave moving using the ROTATE instruction
-- **Sorting Visualiser** — Sorts a block values and renders them as bars
-- **Conway's Game of Life** — toroidal grid with a preloaded glider pattern
-- **Snake** — real-time game with score, speed scaling, and win state
 
 ---
 ## Usage Guide
@@ -114,6 +122,24 @@ cpu.log_dump()
 ...
 F   XX XX XX ... XX  ← 0xF0 -> 0xFF
 ```
+
+---
+
+## What I Learned Building These
+
+**Jump offset calculation is everything.** Adding a feature means inserting bytes, 
+which shifts all subsequent addresses. Every jump that crosses the insertion point 
+needs recalculating. Miss one? Infinite loop or crash.
+
+**Build iteratively, not monolithically.** Snake started as simple movement (40 bytes), 
+then grew: +collision, +food, +validation, +input blocking. Each addition was surgical. 
+Writing 186 bytes at once would've been impossible to debug.
+
+**Bit manipulation replaces entire algorithms.** No modulo? Use `AND 0x07`. 
+No comparison operator? Scan bits MSB-first. Constraints force creativity.
+
+**Self-modifying code is elegant under pressure.** When space is tight, storing 
+computed addresses and loading from them beats any alternative.
 
 ---
 <p align="center"><sub>Inspired by Glenn Brookshear's CS: An Overview (11th Ed).<br>Copyright © Thanas Fuqi 2026</sub></p>
