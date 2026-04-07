@@ -10,7 +10,8 @@ class Machine():
 
     self.debug = True # Enable Printing by default
     self.log_buffer = [] # Hold every printed line
-    self.ROWS, self.COLS = 0, 1 # Start terminal xy
+    self.ROWS, self.COLS = 0, 1 # X rows; Y offset
+    self.delay = 0.05 # Time it sleeps on the log
 
     self.color = {
       "R" : "\033[38;2;0;188;212m",   # [R]egister -> teal cyan
@@ -60,19 +61,18 @@ class Machine():
       for i, line in enumerate(self.log_buffer[-self.ROWS:]):
         output.append(f"\033[{i+1};{self.COLS}H{line}\033[K")
       print("\n".join(output), end="", flush=True)
-
-      time.sleep(0.05) # Sleep to slow the print
+      time.sleep(self.delay) # Slow the printing
 
   # --- The main execution loop ---
   def run(self):
     print("\033[2J\033[1;1H", end="") # Clear any screen residue before starting the program
-    _default_lo = lambda _, __, ___, ____, code: f"{self.PC:02X}[G] : [C]{code}[G] : [M]No logs where found"
+    default_log = lambda _, __, ___, ____, code: f"{self.PC:02X}[G] : [C]{code}[G] : [M]No logs were found"
 
     try:
       while not self.halted:
         # 1. Fetch
         current_byte = self.memory[self.PC]
-        next_byte = self.memory[(self.PC + 1) & 0xFF]
+        next_byte = self.memory[self.PC+1]
 
         # 2. Decode
         o0 = (current_byte >> 4) & 0xF
@@ -82,20 +82,25 @@ class Machine():
 
         if self.debug: # If debug mode print text
           code = f"{((current_byte << 8) | next_byte):04X}"
-          thisLog = self.log_dispatcher.get(o0, _default_lo)
+          thisLog = self.log_dispatcher.get(o0, default_log)
           self.log(thisLog(o1, o2, o3, next_byte, code))
 
         # 3. Execute
-        self.PC = (self.PC + 2) & 0xFF
+        self.PC = self.PC + 2
         operation = self.ISA[o0]
         operation(o1, o2, o3, next_byte)
 
     except KeyboardInterrupt:
       prefix = f"\033[{self.ROWS+1};1H" if self.ROWS and self.debug else ""
       print(f"{prefix}{self.color['R']}Execution interrupted by user\033[0m")
+    except IndexError:
+      prefix = f"\033[{self.ROWS+1};1H" if self.ROWS and self.debug else ""
+      print(f"{prefix}Error : {self.color['R']}PC exceeded bounds\033[0m")
+      raise SystemExit(1) from None
     except KeyError:
       prefix = f"\033[{self.ROWS+1};1H" if self.ROWS and self.debug else ""
-      print(f"{prefix}Error : {self.color['M']}Unknown opcode found\033[0m")
+      print(f"{prefix}Error : {self.color['M']}Unknown opcode {o0:X}\033[0m")
+      raise SystemExit(1) from None
 
   def load(self, hex_string):
     hex_string = "".join( # Remove commented ";"
@@ -105,7 +110,7 @@ class Machine():
 
     try:
       for i, byte in enumerate(bytes.fromhex(hex_string)):
-        self.memory[(self.PC + i) & 0xFF] = byte
+        self.memory[self.PC + i] = byte
 
       print("\033[2J\033[1;1H\033[91m", end="")
       print(f"{'Own Native System':^{35}}")
@@ -121,7 +126,11 @@ class Machine():
       print("└─────────────────────────────────┘\033[0m")
       input(" -> FINISHED LOADING, PRESS ENTER")
     except ValueError:
-      print(f"Error : {self.color['M']}Invalid characters in program string\033[0m")
+      print(f"Error : {self.color['M']}Invalid characters in hex_string\033[0m")
+      raise SystemExit(1) from None
+    except IndexError:
+      print(f"RAM Overflow : {self.color['R']}Program exceeded 256 Bytes\033[0m")
+      raise SystemExit(1) from None
 
   # --- DEBUG TOOLS (DUMPS) ---
   # RUN in root python -i -m folder.file
