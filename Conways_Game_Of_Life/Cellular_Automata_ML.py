@@ -32,11 +32,11 @@ cpu.ISA[0xF] = _display
 
 Cellular_Automata = """
 2080 ; 00 + LOAD GLIDER NO.0
-2160 ; 04 + LOAD GLIDER NO.1
-22C0 ; 08 + LOAD GLIDER NO.2
+2160 ; 02 + LOAD GLIDER NO.1
+22C0 ; 04 + LOAD GLIDER NO.2
 
-30F8 ; 02 + ██--------------
-31F9 ; 06 + --████----------
+30F8 ; 06 + ██--------------
+31F9 ; 08 + --████----------
 32FA ; 0A + ████------------
 
 2DF8 ; 0C DISPLAY_TOP
