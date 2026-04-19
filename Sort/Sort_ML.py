@@ -2,43 +2,41 @@ from Machine_language_CORE import Machine
 import time, random, winsound # Used Libs
 
 cpu = Machine() # Init a machine instance
-delay = 1/2 # Delayed to print ( ~2 fps )
-time_start = time.perf_counter() # Global
-span = 0x27 # The span of the array width
+cpu.span = 0x27 # The span of the array
+cpu.time_start = time.perf_counter()
 
 # ------------ DEBUG OPTIONS ------------
 cpu.debug = False # Disable debuging mode
 
 def _display(o1, _, __, nb):
-  global time_start # Use timer
   print("\033[1;1H", end="")
-  output = [f"┌{'─'*span}┐"]
+  output = [f"┌{'─'*cpu.span}┐"]
 
   for i in range(o1):
     val = cpu.memory[nb + i]
     color = "\033[92m" if nb+i < cpu.register[0x2] else ""
-    output.append(f"\n│{color}{'■'*val}{' '*(span-val)}\033[0m│")
+    output.append(f"\n│{color}{'■'*val}{' '*(cpu.span-val)}\033[0m│")
 
   amount = 0xFF - cpu.register[0x2]
   output.append(
-    f"\n└{'─'*span}┘"
+    f"\n└{'─'*cpu.span}┘"
     f"\n┌───────────────┐"
     f"\n│\033[96m{'█'*(o1-amount)}{' '*amount}\033[0m│ "
     f"{(o1-amount)*6.6666:5.1f}% Time: "
   )
 
   print("".join(output), end="", flush=True)
-  elapsed = time.perf_counter() - time_start
+  elapsed = time.perf_counter() - cpu.time_start
   print(f"{elapsed:6.4f} sec\n└───────────────┘")
 
-  winsound.Beep(2500, 30)
-  time.sleep(max(0, delay - elapsed))
-  time_start = time.perf_counter()
+  winsound.Beep(2500, 30) # Beeping for touch
+  time.sleep(max(0, 1/2-elapsed)) # ~2fps
+  cpu.time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
 
 for i in range(0xF):
-  cpu.memory[0xF0 + i] = random.randint(0, span)
+  cpu.memory[0xF0 + i] = random.randint(0, cpu.span)
 
 Sort_ML = """
 2101 ; 00 LOAD CONST 01

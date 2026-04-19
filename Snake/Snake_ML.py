@@ -2,7 +2,7 @@ from Machine_language_CORE import Machine
 import threading, msvcrt, time, random
 
 cpu = Machine() # Init a machine instance
-time_start = time.perf_counter() # Global time
+cpu.time_start = time.perf_counter()
 
 # ------------ DEBUG OPTIONS ------------
 cpu.debug = False # Disable debuging mode
@@ -16,7 +16,6 @@ def _listener():
 threading.Thread(target=_listener, daemon=True).start()
 
 def _display(n, _, __, display_top):
-  global time_start
   print("\033[1;1H", end="")
 
   output = ["FINISH! RESPECT++" if cpu.register[0xC] == 62 else f"SNAKE LENGTH -> {cpu.register[0xC]+1:02d}"]
@@ -36,12 +35,12 @@ def _display(n, _, __, display_top):
   output.append(f"└{'─' * (n*2)}┘\n")
   print("".join(output), end="", flush=True)
 
-  elapsed = time.perf_counter() - time_start
+  elapsed = time.perf_counter() - cpu.time_start
   print(f"Time: {elapsed:.15f}"[:15] + " sec")
 
   delay = 1 / (7 + min(cpu.register[0xC] // 5, 6))
   time.sleep(max(0, delay - elapsed))
-  time_start = time.perf_counter()
+  cpu.time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
 cpu.ISA[0xD] = lambda R, _, __, mask: cpu.register.__setitem__(R, random.randint(0, 0xFF) & mask)

@@ -2,14 +2,12 @@ from Machine_language_CORE import Machine
 import time # Calculate delay and overhead
 
 cpu = Machine() # Init a machine instance
-delay = 1/10 # Delayed printing (~10 fps)
-time_start = time.perf_counter() # Global time
+cpu.time_start = time.perf_counter()
 
 # ------------ DEBUG OPTIONS ------------
 cpu.debug = False # Disable debuging mode
 
 def _display(n, _, __, display_top):
-  global time_start # Use timer
   print("\033[1;1H", end="")
   output = ["┌────────────────┐"]
 
@@ -22,11 +20,11 @@ def _display(n, _, __, display_top):
   output.append("\n└────────────────┘")
   print("".join(output), end="", flush=True)
 
-  elapsed = time.perf_counter() - time_start
+  elapsed = time.perf_counter() - cpu.time_start
   print(f"\nTime: {elapsed:.15f}"[:15] + " sec")
 
-  time.sleep(max(0, delay - elapsed)) # 0 if negative
-  time_start = time.perf_counter()
+  time.sleep(max(0, 1/10-elapsed)) # ~10fps
+  cpu.time_start = time.perf_counter()
 
 cpu.ISA[0xF] = _display
 
