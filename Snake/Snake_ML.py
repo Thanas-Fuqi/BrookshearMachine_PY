@@ -10,7 +10,7 @@ cpu.debug = False # Disable debuging mode
 def _listener():
 	while True:
 		if msvcrt.kbhit():
-			cpu.register[0xF] =  msvcrt.getch()[0]
+			cpu.register[0xF] = msvcrt.getch()[0]
 		time.sleep(0.001)
 
 threading.Thread(target=_listener, daemon=True).start()
