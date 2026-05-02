@@ -1,5 +1,5 @@
 from Machine_language_CORE import Machine
-import time, random, winsound # Used Libs
+import time, random # Used libraries
 
 cpu = Machine() # Init a machine instance
 cpu.span = 0x27 # The span of the array
@@ -29,7 +29,6 @@ def _display(o1, _, __, nb):
   elapsed = time.perf_counter() - cpu.time_start
   print(f"{elapsed:6.4f} sec\n└───────────────┘")
 
-  winsound.Beep(2500, 30) # Beeping for touch
   time.sleep(max(0, 1/2-elapsed)) # ~2fps
   cpu.time_start = time.perf_counter()
 
