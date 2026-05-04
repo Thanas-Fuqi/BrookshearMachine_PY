@@ -13,10 +13,11 @@ bitwise logic, and manually calculated jump offsets. One wrong byte = hours of d
 
 | Project | Demo Preview | Highlights |
 |---------|---------|------------|
-| [🐍 **Snake (186 B)**](./Snake/) | <img src="./Snake/Snake_ML.gif" alt="Demo" height="100"> | Real-time input • Collision logic • RNG + validation • Win |
-| [🧬 **Conway's Life (188 B)**](./Conways_Game_Of_Life/) | <img src="./Conways_Game_Of_Life/Cellular_Automata_ML.gif" alt="Demo" height="100"> | Toroidal grid • Neighbor counting via bits • Double buffering |
-| [📊 **Sorting Visualizer (66 B)**](./Sort/) | <img src="./Sort/Sort_ML.gif" alt="Demo" height="100"> | Bit-by-bit comparison • Progress bar • Terminal beeps |
 | [🔢 **7-Segment Display (218&nbsp;B)**](./7_Segment_Display/) | <img src="./7_Segment_Display/ML_Hexadecimal.gif" alt="Demo" height="100"> | Rendering • Bit-testing • 0-F cycle |
+| [🧬 **Conway's Life (188 B)**](./Conways_Game_Of_Life/) | <img src="./Conways_Game_Of_Life/Cellular_Automata_ML.gif" alt="Demo" height="100"> | Toroidal grid • Neighbor counting via bits • Double buffering |
+| [🏓 **Pong (170 B)**](./Pong/) | <img src="./Pong/Pong_ML.gif" alt="Demo" height="100"> | 2 player • Win condition • Bit encoded |
+| [🐍 **Snake (186 B)**](./Snake/) | <img src="./Snake/Snake_ML.gif" alt="Demo" height="100"> | Real-time input • Collision logic • RNG + validation • Win |
+| [📊 **Sorting Visualizer (66 B)**](./Sort/) | <img src="./Sort/Sort_ML.gif" alt="Demo" height="100"> | Bit-by-bit comparison • Progress bar • Terminal beeps |
 | [🌊 **Wave Animation (28 B)**](./Wave_Animation/) | <img src="./Wave_Animation/ML_Wave_Loop.gif" alt="Demo" height="100"> | Rotating pattern • Self-modifying code |
 
 ---
